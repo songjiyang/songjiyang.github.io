@@ -3,6 +3,24 @@
 
   
   <url>
+    <loc>http://localhost:4000/posts/mongodb_aggregate/</loc>
+    
+      <lastmod>2019-04-26</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/mongodb_crud/</loc>
+    
+      <lastmod>2019-04-26</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
     <loc>http://localhost:4000/posts/vim_tool/</loc>
     
       <lastmod>2019-04-25</lastmod>
