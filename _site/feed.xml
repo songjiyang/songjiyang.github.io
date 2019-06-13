@@ -6,9 +6,158 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 26 Apr 2019 09:17:04 +0800</pubDate>
-    <lastBuildDate>Fri, 26 Apr 2019 09:17:04 +0800</lastBuildDate>
+    <pubDate>Thu, 13 Jun 2019 15:55:06 +0800</pubDate>
+    <lastBuildDate>Thu, 13 Jun 2019 15:55:06 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
+    
+      <item>
+        <title>kubernetes基础概念和命令</title>
+        <description>&lt;p&gt;kubernetes基础，包括kubectl命令和kubenetes的组件的概念，Pod, Node, Service等。&lt;/p&gt;
+
+&lt;h4 id=&quot;kubectl-基本命令&quot;&gt;kubectl 基本命令&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;kubectl [command] [TYPE] [NAME] [flags]&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;命令&lt;/th&gt;
+      &lt;th&gt;作用&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl create -f mysql-&amp;lt;xx&amp;gt;.yaml&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;根据yaml文件创建一个RC(ReplicationController), 或者Service, 取决于yaml文件中的kind属性&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get pods&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看Pod的创建情况&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get rc&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看RC的情况&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get nodes&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看Node的情况&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get svc&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看服务的情况&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get deployments&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看部署状况&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get endpoints&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看切点情况&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get rs&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看Replica Set(新版本中的RC，支持集合Label selector)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl delete &amp;lt;rc或svc&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;删除一个RC或者Service&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl scale rc my-web --replicas=3&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;动态调整RC副本数量&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h4 id=&quot;kubenetes组成&quot;&gt;kubenetes组成&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Master 控制节点
+    &lt;ol&gt;
+      &lt;li&gt;Kubernetes API Server，提供Rest接口，所有资源增删改查的唯一入口&lt;/li&gt;
+      &lt;li&gt;Kubernetes Controller Manager，资源对象的自动化控制中心&lt;/li&gt;
+      &lt;li&gt;Kubernetes Scheduler，负责资源调度(Pod调度)&lt;/li&gt;
+      &lt;li&gt;etcd，资源数据的保存&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Node 工作节点
+    &lt;ol&gt;
+      &lt;li&gt;kubelet，负责容器创建、启停，与Master沟通&lt;/li&gt;
+      &lt;li&gt;kube-proxy, 实现Kubernetes Service的通信和负载均衡&lt;/li&gt;
+      &lt;li&gt;Docker Engine, 负责容器创建和管理&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Pod 基本单位
+    &lt;ol&gt;
+      &lt;li&gt;Pause容器，代表整个Pod的状态，共享IP，Volume&lt;/li&gt;
+      &lt;li&gt;用户的N个业务容器&lt;/li&gt;
+      &lt;li&gt;Endpoint = Pod IP + contrainerPort，代表服务进行的对外通信地址&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Label 标签
+    &lt;ol&gt;
+      &lt;li&gt;用户自定义的key-value键值对，可以附加到Node, Pod, Service, RC等资源对象上面&lt;/li&gt;
+      &lt;li&gt;LabelSelector可以通过=, in, not in等匹配条件来获取到特定的资源&lt;/li&gt;
+      &lt;li&gt;kube-controller进程通过资源对象RC定义的Label Selector来筛选要监控的Pod副本数量&lt;/li&gt;
+      &lt;li&gt;kube-proxy进行通过Service的Label Selector来选择对应的Pod，自定建议起每个Service到Pod的请求转发路由表&lt;/li&gt;
+      &lt;li&gt;Node定义特定Lable，Pod的NodeSelector，kube-scheduler实现定向调度&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Deployment 部署
+    &lt;ol&gt;
+      &lt;li&gt;RC的一次升级，和RC相似度超过90%&lt;/li&gt;
+      &lt;li&gt;相对于RC最大的升级是可以随时知道Pod部署的进度&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Horizontal Pod Autoscaler(HPA) 横向自动扩容
+    &lt;ol&gt;
+      &lt;li&gt;Pod横向自动扩容，通过追踪Pod的负载情况来确定是否针对调整目标Pod的副本数&lt;/li&gt;
+      &lt;li&gt;通过CPUUtilizationPercetage或者应用自定义度量指标来确定是否需要扩容或者缩容&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Service 服务
+    &lt;ol&gt;
+      &lt;li&gt;微服务，Pod和RC都是为了支持服务&lt;/li&gt;
+      &lt;li&gt;NodeIp(每个节点物理网卡的IP地址), PodIp(虚拟的二层网络), ClusterIp(虚拟的IP,无法被ping,只能和Service Port组成一个具体的通信端口)&lt;/li&gt;
+      &lt;li&gt;PodIp和ClusterIp是无法在k8s集群外访问的，要想访问，就得使用NodePort类型的Service&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Volume 存储卷
+    &lt;ol&gt;
+      &lt;li&gt;Volume是Pod中能被多个容器访问的共享目录，和Docker的Volume类似，但不能等价。&lt;/li&gt;
+      &lt;li&gt;和Pod生命周期相同，和容器生命周期无关&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Persistent Volume 网路存储
+    &lt;ol&gt;
+      &lt;li&gt;每个Node都可以访问，独立于Pod之外&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Namespace 命名空间
+    &lt;ol&gt;
+      &lt;li&gt;实现多租户的资源隔离&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Annoation 注解
+    &lt;ol&gt;
+      &lt;li&gt;用户定义的任意附加信息， 以便于外部工具查找&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+</description>
+        <pubDate>Thu, 13 Jun 2019 16:35:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/k8s_basic/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/k8s_basic/</guid>
+        
+        <category>kubernetes</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
     
       <item>
         <title>mongodb聚合操作</title>
@@ -1076,278 +1225,6 @@ set nofoldenable
         <pubDate>Wed, 24 Apr 2019 10:26:00 +0800</pubDate>
         <link>http://localhost:4000/posts/vim_pattern/</link>
         <guid isPermaLink="true">http://localhost:4000/posts/vim_pattern/</guid>
-        
-        <category>vim</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>vim文件</title>
-        <description>&lt;p&gt;Vim文件的打开，跳转，缓存，多窗口，多标签&lt;/p&gt;
-
-&lt;h4 id=&quot;同时打开多个文件&quot;&gt;同时打开多个文件&lt;/h4&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;缓存&lt;/th&gt;
-      &lt;th&gt;功能&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:ls&lt;/td&gt;
-      &lt;td&gt;显示缓存中的文件列表&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:bnext(:bn)&lt;/td&gt;
-      &lt;td&gt;跳到下一个文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:bprevious(:bp)&lt;/td&gt;
-      &lt;td&gt;跳到上一个文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;C-^&lt;/td&gt;
-      &lt;td&gt;可以在当前文件和下个替换文件间切换，前面有%表示当前文件，有#表示下个替换文件,+表示已经被修改过,h代表hidden,a代表active&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:buffer n(:b n)&lt;/td&gt;
-      &lt;td&gt;跳转缓存文件列表的标号所在文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:buffer name&lt;/td&gt;
-      &lt;td&gt;跳转缓存文件列表名称所在文件，name只要可以标识出是哪个文件就可以了，可以通过tab键补全&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:bufdo cmd&lt;/td&gt;
-      &lt;td&gt;多缓存文件列表中的所有文件同时执行一个命令&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:bdelete n or :n,mbdelete(:bd n)&lt;/td&gt;
-      &lt;td&gt;删除缓存中的一个文件或者多个文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:qall!&lt;/td&gt;
-      &lt;td&gt;退出，不保存所有文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:wall&lt;/td&gt;
-      &lt;td&gt;保存所有文件&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;参数&lt;/th&gt;
-      &lt;th&gt;功能&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:args&lt;/td&gt;
-      &lt;td&gt;显示作为vim的参数，当打开多个文件时，为多个文件的名称&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:args {arglist}&lt;/td&gt;
-      &lt;td&gt;清空并设置参数列表,可使用通配符（wildcard）,``包含命令&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:prev&lt;/td&gt;
-      &lt;td&gt;跳转前一个文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:next(:n)&lt;/td&gt;
-      &lt;td&gt;跳转后一个文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;:argdo cmd&lt;/td&gt;
-      &lt;td&gt;对多个打开的文件执行同一个命令&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;通配符&lt;/th&gt;
-      &lt;th&gt;功能&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;?&lt;/td&gt;
-      &lt;td&gt;匹配一个字符&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;*&lt;/td&gt;
-      &lt;td&gt;匹配任意字符，0个或多个&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;**&lt;/td&gt;
-      &lt;td&gt;匹配任意字符，0个或多个，可以循环在目录下面寻找&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;[abc]&lt;/td&gt;
-      &lt;td&gt;匹配a或者b或者c&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;多窗口&lt;/th&gt;
-      &lt;th&gt;功能&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;C-w s&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;水平分裂窗口&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;C-w v&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;垂直分裂窗口&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:sp(lit) file&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;水平分裂窗口，在新窗口加载file&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:vsp(lit) file&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;垂直分裂窗口，在新窗口加载file&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;C-w w&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;在多个窗口间循环的切换&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;C-w hjkl&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;分别将切换到左上下右面的窗口&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:clo(se)&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;关闭当前的窗口&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:on(ly)&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;关闭其他的窗口，留下激活的窗口&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;C-w =&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;使所有窗口高度和宽度尽可能相等&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;[N]C-w _&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;不加N使该窗口高度最大,加N指定窗口高度为几行&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;[N]C-w |&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;不加N使该窗口宽度最大,加N指定窗口宽度为几行&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;标签&lt;/th&gt;
-      &lt;th&gt;功能&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:lcd&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;给当前窗口设置工作目录&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:tabe(dit) {filename}&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;在新标签中打开filename这个文件&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:tabc(lose)&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;关闭当前标签&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:tabo(only)&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;留下当前标签，关闭其他标签&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:tabp(revious) {N}&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;gT&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;切换到前一个（第N个）标签&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:tabn(ext) {N}&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;{N}gt&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;切换到后一个（第N个）标签&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:tabmove {N}&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;移动标签到N位置之后，0表示第一个，省略表示结尾&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;打开文件&lt;/th&gt;
-      &lt;th&gt;功能&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:edit %Tab&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;会显示当前buffer的文件路径&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:edit %:hTab&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;会显示当前buffer的文件夹路径，不包含此文件名&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:set path+={path} &lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;设置find查找的路径，可以使用通配符&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:find {filename}&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;之后可以在这个路径之内使用在打开路径下面的文件，可以使用通配符&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:edit .&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;:e.&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;打开当前文件目录，使用newtr插件可以查看文件目录&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:edit %:h&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;打开缓存文件路径所在目录&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:Explore&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;:E&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;打开缓存文件路径所在目录&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:Sexplore&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;打开缓存文件路径所在目录并放入水平分割的窗口中&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:Vexplore&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;打开缓存文件路径所在目录并放入垂直分割的窗口中&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;cnoremap &lt;expr&gt; %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'  一个vim映射，可以将%%代替%:hTab&lt;/expr&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:w !sudo tee % &amp;gt; /dev/null&lt;/code&gt;  可以在vim内使用root用户保存文件，&lt;code class=&quot;highlighter-rouge&quot;&gt;w !{cmd}&lt;/code&gt;  将缓存内容作为cmd的标准输入,&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo&lt;/code&gt;获取root权限，&lt;code class=&quot;highlighter-rouge&quot;&gt;tee&lt;/code&gt;获取标准输入，输出标准输出，&lt;code class=&quot;highlighter-rouge&quot;&gt;%&lt;/code&gt;代表当前文件路径&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Tue, 23 Apr 2019 10:26:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/vim_file/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/vim_file/</guid>
         
         <category>vim</category>
         
