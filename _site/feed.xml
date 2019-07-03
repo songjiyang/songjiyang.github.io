@@ -6,8 +6,8 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 03 Jul 2019 16:29:59 +0800</pubDate>
-    <lastBuildDate>Wed, 03 Jul 2019 16:29:59 +0800</lastBuildDate>
+    <pubDate>Wed, 03 Jul 2019 17:08:50 +0800</pubDate>
+    <lastBuildDate>Wed, 03 Jul 2019 17:08:50 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
     
       <item>
@@ -165,243 +165,75 @@
       </item>
     
       <item>
-        <title>mongodb聚合操作</title>
-        <description>&lt;p&gt;mongodb的一些聚合（aggregate）操作的基本使用&lt;/p&gt;
+        <title>mongodb索引</title>
+        <description>&lt;p&gt;mongodb的索引的基本使用&lt;/p&gt;
 
-&lt;h2 id=&quot;聚合&quot;&gt;聚合&lt;/h2&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;{ &amp;lt;operator&amp;gt;: [&amp;lt;argument1&amp;gt;, &amp;lt;argument2&amp;gt;...]}&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;聚合操作&quot;&gt;聚合操作&lt;/h3&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;db.collection.aggregate(&amp;lt;pipeline&amp;gt;, &amp;lt;optinos&amp;gt;)&lt;/code&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;字段路径表达式&quot;&gt;字段路径表达式&lt;/h4&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;格式&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$&amp;lt;field&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;使用$来指示字段路径&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$&amp;lt;field&amp;gt;.&amp;lt;sub-field&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;使用$和.来指示内嵌文档字段路径&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;h4 id=&quot;系统变量表达式&quot;&gt;系统变量表达式&lt;/h4&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;格式&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$$&amp;lt;variable&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;使用$$来指示系统变量&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;h4 id=&quot;常量表达式&quot;&gt;常量表达式&lt;/h4&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;格式&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$literal: &amp;lt;variable&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;如果variable带$开头会被当成字段路径表达式，此种写法可以有类似转义的功能&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;h4 id=&quot;聚合管道阶段&quot;&gt;聚合管道阶段&lt;/h4&gt;
-
-&lt;h5 id=&quot;project&quot;&gt;$project&lt;/h5&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    db.acccounts.aggregate( [
-        {
-            $project: {
-                _id: 0,    // 不输出_id
-                balance: 1, // 输出balance
-                clientName: &quot;$name.firstName&quot; //将name.firstName映射到clientName字段上面
-            }
-        }
-    ])
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    db.acccounts.aggregate( [
-        {
-            $project: {
-                _id: 0,    // 不输出_id
-                balance: 1, // 输出balance
-                nameArray: [ &quot;$name.firstName&quot;, &quot;$name.middleName&quot;, &quot;$name.lastName&quot;] 
-                //输出一个数组,取文档中的值，当文档对应字段不存在时输出null
-            }
-        }
-    ])
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h5 id=&quot;match&quot;&gt;$match&lt;/h5&gt;
-&lt;p&gt;和前面的条件筛选一致&lt;/p&gt;
+&lt;h2 id=&quot;索引&quot;&gt;索引&lt;/h2&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;应该在最开始的使用match,一是剔除不关心的数据，二是提高聚合的效率&lt;/li&gt;
+  &lt;li&gt;索引分为单键索引和复合索引&lt;/li&gt;
+  &lt;li&gt;mongodb采用b-tree做索引&lt;/li&gt;
+  &lt;li&gt;复合索引只能支持前缀子查询&lt;/li&gt;
+  &lt;li&gt;explain()函数可以进行查询分析&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h5 id=&quot;limit&quot;&gt;$limit&lt;/h5&gt;
-&lt;h5 id=&quot;skip&quot;&gt;$skip&lt;/h5&gt;
+&lt;h4 id=&quot;创建索引&quot;&gt;创建索引&lt;/h4&gt;
 
-&lt;h5 id=&quot;unwind&quot;&gt;$unwind&lt;/h5&gt;
+&lt;p&gt;db.collection.createIndex(&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;keys&amp;gt;&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;options&amp;gt;&lt;/code&gt;), &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;keys&amp;gt;&lt;/code&gt;文档指定了创建索引的字段&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    db.acccounts.aggregate( [
-        {
-            $unwind: {
-              path: &quot;$currency&quot;,
-              // 将一个数组展开
-              includeArrayIndex: &quot;ccyIndex&quot;
-              // 在展开时添加元素位置
-            }
-        }
-    ])
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;ul&gt;
-  &lt;li&gt;当unwind字段不存在，或者为null,或者为空数组的时候不会显示出来，设置preserveNullAndEmptyArrays为true的时候会将这个文档显示出来&lt;/li&gt;
+  &lt;li&gt;单键索引keys文档只有一个字段&lt;/li&gt;
+  &lt;li&gt;复合索引keys文档有多个字段&lt;/li&gt;
+  &lt;li&gt;多键索引，对一个数组字段设置索引&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h5 id=&quot;sort&quot;&gt;$sort&lt;/h5&gt;
+&lt;h4 id=&quot;查询索引&quot;&gt;查询索引&lt;/h4&gt;
+
+&lt;p&gt;db.collection.getIndexes()&lt;/p&gt;
+
+&lt;h4 id=&quot;索引的效果&quot;&gt;索引的效果&lt;/h4&gt;
+
+&lt;p&gt;db.collection.explain().&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;method(...)&amp;gt;&lt;/code&gt;,&lt;/p&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;1为从小到大排序，-1为从大到小排序&lt;/li&gt;
+  &lt;li&gt;查看winningPlan的stage， COLLSCAN表示线性扫描，IXSCAN代表索引扫描&lt;/li&gt;
+  &lt;li&gt;当查询到索引且只要返回索引字段，则不用去FETCH，最大化利用了索引&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h5 id=&quot;lookup&quot;&gt;$lookup&lt;/h5&gt;
+&lt;h4 id=&quot;删除索引&quot;&gt;删除索引&lt;/h4&gt;
+
+&lt;p&gt;db.collection.dropIndex()&lt;/p&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;格式一
-```
-  $lookup: {
-      from: &lt;collection to=&quot;&quot; join=&quot;&quot;&gt;,
-      localFiedld: &lt;field from=&quot;&quot; the=&quot;&quot; input=&quot;&quot; documents=&quot;&quot;&gt;,
-      foreignField: &amp;lt;field from the documents of the &quot;from&quot; collection&amp;gt;,
-      as: &lt;output array=&quot;&quot; field=&quot;&quot;&gt;
-  }&lt;/output&gt;&lt;/field&gt;&lt;/collection&gt;&lt;/li&gt;
+  &lt;li&gt;如果要更改某些字段上已经创建的索引，必须首先删除原有索引，再重新创建索引，否则，新索引不会包含原有文档&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;- 将查询到的外汇汇率写入银行账户文档
+&lt;h4 id=&quot;索引的特性&quot;&gt;索引的特性&lt;/h4&gt;
 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;db.accounts.aggregate([
-    $lookup: {
-        from: forex,   // 另一集合的名称
-        localField: currency,   //本集合要匹配的字段
-        foreignField: ccy,    // 另一个集合要匹配的字段
-        as: forexData  //匹配上之后，forex将被当做内嵌文档插入本集合，名称则为该值
-    }
-]) ``` - 格式二 ```
-$lookup: {
-    from: &amp;lt;collection to join&amp;gt;,
-    let: { &amp;lt;var_1&amp;gt;: &amp;lt;expression&amp;gt;,..., &amp;lt;var_n&amp;gt;: &amp;lt;expression&amp;gt;},
-    pipeline: &amp;lt;pipeline to execute on the collection to join&amp;gt;,
-    // 满足pipeline的文档才会被插入本文档
-    as: &amp;lt;output array field&amp;gt;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; - 将特定日期外汇汇率写入余额大于100的银行账户文档
- 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$lookup: {
-    from: &quot;forex&quot;
-    let: { bal: &quot;$balance&quot;},
-    pipeline:[
-    {
-        $match: {
-            $expr: {  //使用let中的变量的前提
-                $and: [
-                    {$eq: [&quot;date&quot;, new Date(&quot;2018-12-21&quot;)]},
-                    {$gt: [&quot;$$bal&quot;, 100]}  //使用let中声名的变量
-                ]
-            }
-        }
-    }
-    ]
-    as: &quot;forexData&quot;
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
-##### $group
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$group: {
-    _id: &amp;lt;expression&amp;gt;,
-    &amp;lt;field1&amp;gt;: { &amp;lt;accumulator1&amp;gt;: &amp;lt;expression1&amp;gt; }
-} ``` - 按照交易货币来分组交易 ```
-db.transaction.aggregate([
-    {
-        $group: {
-            _id: &quot;$currency&quot;
-        }
-    }
-]) ``` - 使用聚合操作符计算分组聚合值 ```
-db.transactions.aggregate([
-    {
-        $group: {
-            // 按照currency分组
-            _id: &quot;$currency&quot;,
-            // qty字段的和，赋值到新字段totalQty
-            totalQty: { $sum: &quot;$qty&quot; },
-            // price和qty相乘，然后求和再赋值到totalNotional
-            totalNotional: {$sum: {$multiply [ &quot;$price&quot;, &quot;$qty&quot;]}},
-            // price的平均值
-            avgPrice: { $avg: &quot;$price&quot;}
-            // 文档的数量
-            count: {$sum : 1},
-            // 最大金额
-            maxNotional: {$max: {$multiply: [&quot;$price&quot;, &quot;$qty&quot;] }},
-            // 最小金额 
-            minNotional: {$min: {$multiply: [&quot;$price&quot;, &quot;$qty&quot;] }}
-        }
-    }
-]) ``` - 如果想聚合但不分组时，可以将_id设置为null,这是所有的文档会当做一个组 - 可以和push配合创建一个新的数组 - $out可以将查询的内容写入一个新的集合，当新的集合存在时，会将文档覆盖，当管道阶段遇到错误，则新集合不会被创建，旧集合也不会被覆盖
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h4 id=&quot;聚合选项&quot;&gt;聚合选项&lt;/h4&gt;
-
+&lt;h5 id=&quot;索引的唯一性&quot;&gt;索引的唯一性&lt;/h5&gt;
 &lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;allowDiskUse: &amp;lt;boolean&amp;gt;&lt;/code&gt;, 每个聚合管道阶段使用的内存不能超过100MB,如果数据量较大，为了防止聚合管道阶段超出内存上限并且抛出错误，可以用该选项&lt;/li&gt;
+  &lt;li&gt;{unique: true}&lt;/li&gt;
+  &lt;li&gt;如果某个字段出现了重复值，就不可以在字段上创建唯一索引&lt;/li&gt;
+  &lt;li&gt;如果新增的文档不包含唯一性索引字段，只有第一篇缺失该字段的文档可以被写入数据库，索引中该文档的键值被默认为null&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4 id=&quot;聚合操作优化&quot;&gt;聚合操作优化&lt;/h4&gt;
-&lt;h5 id=&quot;顺序优化&quot;&gt;顺序优化&lt;/h5&gt;
+&lt;h5 id=&quot;索引的稀疏性-只将包含索引键字段的文档加入索引中&quot;&gt;索引的稀疏性 （只将包含索引键字段的文档加入索引中)&lt;/h5&gt;
 &lt;ul&gt;
-  &lt;li&gt;$match阶段会尽量在$project阶段之前运行，但有些条件必须在project之后则不能被优化&lt;/li&gt;
-  &lt;li&gt;$match阶段会在$sort阶段之前运行&lt;/li&gt;
-  &lt;li&gt;$skip阶段会在$project阶段之前运行
-    &lt;h5 id=&quot;合并优化&quot;&gt;合并优化&lt;/h5&gt;
-  &lt;/li&gt;
-  &lt;li&gt;$sort和$limit之间没有夹杂着改变文档数量的聚合阶段，阶段可以合并，unwind和match时可以改变文档数量的操作&lt;/li&gt;
-  &lt;li&gt;相同的阶段可以合并，limit, skip, match&lt;/li&gt;
-  &lt;li&gt;lookup和unwind， 如果应用在lookup阶段创建的as字段上面，两则可以合并&lt;/li&gt;
+  &lt;li&gt;{sparse: true}&lt;/li&gt;
+  &lt;li&gt;如果同一个索引既具有唯一性，又具有稀疏性，那么可以存储多篇缺失索引字段的文档&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;索引的生存时间-针对日期字段设定生存时间自动删除超过生存时间的文档&quot;&gt;索引的生存时间 （针对日期字段，设定生存时间，自动删除超过生存时间的文档）&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;{expireAfterSeconds: 20}&lt;/li&gt;
+  &lt;li&gt;复合键索引不具备生存时间特性&lt;/li&gt;
+  &lt;li&gt;当索引键是包含日期元素的数组字段时，数组中的最小日期将被用来计算文档是否已经过期&lt;/li&gt;
+  &lt;li&gt;过期删除操作有一定的延迟&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-        <pubDate>Fri, 26 Apr 2019 10:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/mongodb_aggregate/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_aggregate/</guid>
+        <pubDate>Wed, 03 Jul 2019 17:00:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/mongodb_index/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_index/</guid>
         
         <category>mongodb</category>
         
@@ -657,6 +489,252 @@ db.transactions.aggregate([
         <pubDate>Fri, 26 Apr 2019 10:00:00 +0800</pubDate>
         <link>http://localhost:4000/posts/mongodb_crud/</link>
         <guid isPermaLink="true">http://localhost:4000/posts/mongodb_crud/</guid>
+        
+        <category>mongodb</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
+    
+      <item>
+        <title>mongodb聚合操作</title>
+        <description>&lt;p&gt;mongodb的一些聚合（aggregate）操作的基本使用&lt;/p&gt;
+
+&lt;h2 id=&quot;聚合&quot;&gt;聚合&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;{ &amp;lt;operator&amp;gt;: [&amp;lt;argument1&amp;gt;, &amp;lt;argument2&amp;gt;...]}&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;聚合操作&quot;&gt;聚合操作&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;db.collection.aggregate(&amp;lt;pipeline&amp;gt;, &amp;lt;optinos&amp;gt;)&lt;/code&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;字段路径表达式&quot;&gt;字段路径表达式&lt;/h4&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;格式&lt;/th&gt;
+      &lt;th&gt;作用&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$&amp;lt;field&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;使用$来指示字段路径&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$&amp;lt;field&amp;gt;.&amp;lt;sub-field&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;使用$和.来指示内嵌文档字段路径&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h4 id=&quot;系统变量表达式&quot;&gt;系统变量表达式&lt;/h4&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;格式&lt;/th&gt;
+      &lt;th&gt;作用&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$$&amp;lt;variable&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;使用$$来指示系统变量&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h4 id=&quot;常量表达式&quot;&gt;常量表达式&lt;/h4&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;格式&lt;/th&gt;
+      &lt;th&gt;作用&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;$literal: &amp;lt;variable&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;如果variable带$开头会被当成字段路径表达式，此种写法可以有类似转义的功能&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h4 id=&quot;聚合管道阶段&quot;&gt;聚合管道阶段&lt;/h4&gt;
+
+&lt;h5 id=&quot;project&quot;&gt;$project&lt;/h5&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    db.acccounts.aggregate( [
+        {
+            $project: {
+                _id: 0,    // 不输出_id
+                balance: 1, // 输出balance
+                clientName: &quot;$name.firstName&quot; //将name.firstName映射到clientName字段上面
+            }
+        }
+    ])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    db.acccounts.aggregate( [
+        {
+            $project: {
+                _id: 0,    // 不输出_id
+                balance: 1, // 输出balance
+                nameArray: [ &quot;$name.firstName&quot;, &quot;$name.middleName&quot;, &quot;$name.lastName&quot;] 
+                //输出一个数组,取文档中的值，当文档对应字段不存在时输出null
+            }
+        }
+    ])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h5 id=&quot;match&quot;&gt;$match&lt;/h5&gt;
+&lt;p&gt;和前面的条件筛选一致&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;应该在最开始的使用match,一是剔除不关心的数据，二是提高聚合的效率&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;limit&quot;&gt;$limit&lt;/h5&gt;
+&lt;h5 id=&quot;skip&quot;&gt;$skip&lt;/h5&gt;
+
+&lt;h5 id=&quot;unwind&quot;&gt;$unwind&lt;/h5&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    db.acccounts.aggregate( [
+        {
+            $unwind: {
+              path: &quot;$currency&quot;,
+              // 将一个数组展开
+              includeArrayIndex: &quot;ccyIndex&quot;
+              // 在展开时添加元素位置
+            }
+        }
+    ])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;当unwind字段不存在，或者为null,或者为空数组的时候不会显示出来，设置preserveNullAndEmptyArrays为true的时候会将这个文档显示出来&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;sort&quot;&gt;$sort&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;1为从小到大排序，-1为从大到小排序&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;lookup&quot;&gt;$lookup&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;格式一
+```
+  $lookup: {
+      from: &lt;collection to=&quot;&quot; join=&quot;&quot;&gt;,
+      localFiedld: &lt;field from=&quot;&quot; the=&quot;&quot; input=&quot;&quot; documents=&quot;&quot;&gt;,
+      foreignField: &amp;lt;field from the documents of the &quot;from&quot; collection&amp;gt;,
+      as: &lt;output array=&quot;&quot; field=&quot;&quot;&gt;
+  }&lt;/output&gt;&lt;/field&gt;&lt;/collection&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;- 将查询到的外汇汇率写入银行账户文档
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;db.accounts.aggregate([
+    $lookup: {
+        from: forex,   // 另一集合的名称
+        localField: currency,   //本集合要匹配的字段
+        foreignField: ccy,    // 另一个集合要匹配的字段
+        as: forexData  //匹配上之后，forex将被当做内嵌文档插入本集合，名称则为该值
+    }
+]) ``` - 格式二 ```
+$lookup: {
+    from: &amp;lt;collection to join&amp;gt;,
+    let: { &amp;lt;var_1&amp;gt;: &amp;lt;expression&amp;gt;,..., &amp;lt;var_n&amp;gt;: &amp;lt;expression&amp;gt;},
+    pipeline: &amp;lt;pipeline to execute on the collection to join&amp;gt;,
+    // 满足pipeline的文档才会被插入本文档
+    as: &amp;lt;output array field&amp;gt;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; - 将特定日期外汇汇率写入余额大于100的银行账户文档
+ 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$lookup: {
+    from: &quot;forex&quot;
+    let: { bal: &quot;$balance&quot;},
+    pipeline:[
+    {
+        $match: {
+            $expr: {  //使用let中的变量的前提
+                $and: [
+                    {$eq: [&quot;date&quot;, new Date(&quot;2018-12-21&quot;)]},
+                    {$gt: [&quot;$$bal&quot;, 100]}  //使用let中声名的变量
+                ]
+            }
+        }
+    }
+    ]
+    as: &quot;forexData&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+##### $group
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$group: {
+    _id: &amp;lt;expression&amp;gt;,
+    &amp;lt;field1&amp;gt;: { &amp;lt;accumulator1&amp;gt;: &amp;lt;expression1&amp;gt; }
+} ``` - 按照交易货币来分组交易 ```
+db.transaction.aggregate([
+    {
+        $group: {
+            _id: &quot;$currency&quot;
+        }
+    }
+]) ``` - 使用聚合操作符计算分组聚合值 ```
+db.transactions.aggregate([
+    {
+        $group: {
+            // 按照currency分组
+            _id: &quot;$currency&quot;,
+            // qty字段的和，赋值到新字段totalQty
+            totalQty: { $sum: &quot;$qty&quot; },
+            // price和qty相乘，然后求和再赋值到totalNotional
+            totalNotional: {$sum: {$multiply [ &quot;$price&quot;, &quot;$qty&quot;]}},
+            // price的平均值
+            avgPrice: { $avg: &quot;$price&quot;}
+            // 文档的数量
+            count: {$sum : 1},
+            // 最大金额
+            maxNotional: {$max: {$multiply: [&quot;$price&quot;, &quot;$qty&quot;] }},
+            // 最小金额 
+            minNotional: {$min: {$multiply: [&quot;$price&quot;, &quot;$qty&quot;] }}
+        }
+    }
+]) ``` - 如果想聚合但不分组时，可以将_id设置为null,这是所有的文档会当做一个组 - 可以和push配合创建一个新的数组 - $out可以将查询的内容写入一个新的集合，当新的集合存在时，会将文档覆盖，当管道阶段遇到错误，则新集合不会被创建，旧集合也不会被覆盖
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;聚合选项&quot;&gt;聚合选项&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;allowDiskUse: &amp;lt;boolean&amp;gt;&lt;/code&gt;, 每个聚合管道阶段使用的内存不能超过100MB,如果数据量较大，为了防止聚合管道阶段超出内存上限并且抛出错误，可以用该选项&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;聚合操作优化&quot;&gt;聚合操作优化&lt;/h4&gt;
+&lt;h5 id=&quot;顺序优化&quot;&gt;顺序优化&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;$match阶段会尽量在$project阶段之前运行，但有些条件必须在project之后则不能被优化&lt;/li&gt;
+  &lt;li&gt;$match阶段会在$sort阶段之前运行&lt;/li&gt;
+  &lt;li&gt;$skip阶段会在$project阶段之前运行
+    &lt;h5 id=&quot;合并优化&quot;&gt;合并优化&lt;/h5&gt;
+  &lt;/li&gt;
+  &lt;li&gt;$sort和$limit之间没有夹杂着改变文档数量的聚合阶段，阶段可以合并，unwind和match时可以改变文档数量的操作&lt;/li&gt;
+  &lt;li&gt;相同的阶段可以合并，limit, skip, match&lt;/li&gt;
+  &lt;li&gt;lookup和unwind， 如果应用在lookup阶段创建的as字段上面，两则可以合并&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Fri, 26 Apr 2019 10:00:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/mongodb_aggregate/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_aggregate/</guid>
         
         <category>mongodb</category>
         
@@ -935,301 +1013,6 @@ set nofoldenable
         <pubDate>Thu, 25 Apr 2019 10:26:00 +0800</pubDate>
         <link>http://localhost:4000/posts/vim_tool/</link>
         <guid isPermaLink="true">http://localhost:4000/posts/vim_tool/</guid>
-        
-        <category>vim</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>vim模式</title>
-        <description>&lt;p&gt;Vim的查找替换的匹配模式&lt;/p&gt;
-
-&lt;h5 id=&quot;查找&quot;&gt;查找&lt;/h5&gt;
-&lt;ul&gt;
-  &lt;li&gt;:set ingorecase设置全局忽略大小写，影响配合和自动补全&lt;/li&gt;
-  &lt;li&gt;\c忽略大小写，\C大小写敏感&lt;/li&gt;
-  &lt;li&gt;:set smartcase在字符串全为小写时忽略大小写，字符串含有一个大写时大小写敏感&lt;/li&gt;
-  &lt;li&gt;vim正则表达式更接近POSIX，而不是Perl&lt;/li&gt;
-  &lt;li&gt;正则中中括号&lt;code class=&quot;highlighter-rouge&quot;&gt;[]&lt;/code&gt;不需要转义（escape）；小括号&lt;code class=&quot;highlighter-rouge&quot;&gt;()&lt;/code&gt;两个都需要转义；大括号&lt;code class=&quot;highlighter-rouge&quot;&gt;{}&lt;/code&gt;只需要转义前面的就可以了,都转义也可以。&lt;/li&gt;
-  &lt;li&gt;\v very magic 可以在正则中不需要转义特殊功能字符,和Perl规则一致&lt;/li&gt;
-  &lt;li&gt;\V very nomagic 除了\有特殊含义之外，其他的字符都无特殊含义，如.*等&lt;/li&gt;
-  &lt;li&gt;用小括号()引住的内容会被存起来，后面可以用/n引用到，n对应小括号的出现的位置，/0代表整个匹配的内容,使用%不让小括号去捕获内容,当括号中有括号时，按左括号出现的顺序排序&lt;/li&gt;
-  &lt;li&gt;&lt;em&gt;往下查找光标下的单词（整个单词），#往上查找，g&lt;/em&gt;往下查找光标下的单词（不一定非得整个单词）,g#向上查找&lt;/li&gt;
-  &lt;li&gt;escape(@u,’/'),使用escape函数将u寄存器中的内容的/前面增加\转义,更加通用的方式&lt;code class=&quot;highlighter-rouge&quot;&gt;escape(@u,getcmdtype().'\')&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;常用字符含义(:h /character-classes)&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-      &lt;th&gt;相反&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\s&lt;/td&gt;
-      &lt;td&gt;空白字符，空格和Tab&lt;/td&gt;
-      &lt;td&gt;\S&lt;/td&gt;
-      &lt;td&gt;非空白字符&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\d&lt;/td&gt;
-      &lt;td&gt;数字&lt;/td&gt;
-      &lt;td&gt;\D&lt;/td&gt;
-      &lt;td&gt;非数字&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\x&lt;/td&gt;
-      &lt;td&gt;十六进制 [0-9a-fA-F]&lt;/td&gt;
-      &lt;td&gt;\X&lt;/td&gt;
-      &lt;td&gt;非十六进制&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\o&lt;/td&gt;
-      &lt;td&gt;八进制 [0-7]&lt;/td&gt;
-      &lt;td&gt;\O&lt;/td&gt;
-      &lt;td&gt;非八进制&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\w&lt;/td&gt;
-      &lt;td&gt;数字，字母和下划线 [0-9a-zA-Z_]&lt;/td&gt;
-      &lt;td&gt;\W&lt;/td&gt;
-      &lt;td&gt;相反&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\h&lt;/td&gt;
-      &lt;td&gt;字母和下划线[a-zA-z_]&lt;/td&gt;
-      &lt;td&gt;\H&lt;/td&gt;
-      &lt;td&gt;相反&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\a&lt;/td&gt;
-      &lt;td&gt;字母 [a-zA-Z]&lt;/td&gt;
-      &lt;td&gt;\A&lt;/td&gt;
-      &lt;td&gt;相反&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\l&lt;/td&gt;
-      &lt;td&gt;小写字母 [a-z]&lt;/td&gt;
-      &lt;td&gt;\L&lt;/td&gt;
-      &lt;td&gt;相反&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\u&lt;/td&gt;
-      &lt;td&gt;大写字母 [A-Z]&lt;/td&gt;
-      &lt;td&gt;\U&lt;/td&gt;
-      &lt;td&gt;相反&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\e&lt;/td&gt;
-      &lt;td&gt;Esc&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\t&lt;/td&gt;
-      &lt;td&gt;Tab&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\r&lt;/td&gt;
-      &lt;td&gt;CR&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\_&lt;/td&gt;
-      &lt;td&gt;\_s 空格或者换行，s可以由上面的字母替换&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&amp;lt;&amp;gt;&lt;/td&gt;
-      &lt;td&gt;单词的边界&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;\zs \ze&lt;/td&gt;
-      &lt;td&gt;匹配(match)的边界，表明了需要查找的部分,但任要符合模式(pattern)&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-      &lt;td&gt;-&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;命令&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;/&lt;/td&gt;
-      &lt;td&gt;向后查找&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;?&lt;/td&gt;
-      &lt;td&gt;向前查找&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;n&lt;/td&gt;
-      &lt;td&gt;重复上一次查找&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;N&lt;/td&gt;
-      &lt;td&gt;反向上一次查找&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;/CR&lt;/td&gt;
-      &lt;td&gt;向下重复上一次查找&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;?CR&lt;/td&gt;
-      &lt;td&gt;向上重复上一次查找&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;/{content}/e&lt;/td&gt;
-      &lt;td&gt;查找指定内容，并将光标放到指定内容的后面&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;//e&lt;/td&gt;
-      &lt;td&gt;向下查找上一次内容并移动光标，可用于补救&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;gn&lt;/td&gt;
-      &lt;td&gt;—vim7.4 进入虚拟模式选中下个匹配，一般配合operator&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;gN&lt;/td&gt;
-      &lt;td&gt;—vim7.4 进入虚拟模式选中上个匹配，一般配合operator&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;:set hls 设置高亮， :set nohls 关闭高亮， :nohls 这次关闭高亮&lt;/li&gt;
-  &lt;li&gt;nnoremap &lt;silent&gt; &lt;C-l&gt; :&lt;C-u&gt;nohlsearch&lt;CR&gt;&lt;C-l&gt;  设置C-L清除高亮,C-L通常用来清除屏幕信息&lt;/C-l&gt;&lt;/CR&gt;&lt;/C-u&gt;&lt;/C-l&gt;&lt;/silent&gt;&lt;/li&gt;
-  &lt;li&gt;:set incsearch 设置在输入搜索关键字的同时会在文档中查找，并高亮给予反馈,对于需要查找整个单词的，这时不必手动打全，只用&lt;code class=&quot;highlighter-rouge&quot;&gt;C-rC-w&lt;/code&gt;就可以将剩下的字符补全&lt;/li&gt;
-  &lt;li&gt;可以先查找，捕获查找，在替换中引用，善于利用&lt;up&gt;和q/一步步完善正则表达式&lt;/up&gt;&lt;/li&gt;
-  &lt;li&gt;%s///gn 统计次数，搜索域为空默认为使用当前的模式，g为每行的所有匹配，n为不实际执行替换，显示匹配的个数&lt;/li&gt;
-  &lt;li&gt;:vimgrep //g %   %代表当前文件  搜索域为空代表使用当前的模式，统计次数并显示当前是第几个，cnext和cprev可以在匹配中移动就好像n和N&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h5 id=&quot;替换&quot;&gt;替换&lt;/h5&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:[range]substitute/{pat-tern}/{string}/[flags]&lt;/code&gt;&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;替换域字符&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;\r&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;插入回车&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;\t&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;插入tab&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;\\&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;代表一个反斜杠&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;\1&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;插入匹配域中第一个匹配，由括号括起来为一个匹配&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;\2&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;插入第二个匹配，同理，直到&lt;code class=&quot;highlighter-rouge&quot;&gt;\9&lt;/code&gt;&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;\0&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;amp;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;插入整个匹配域&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;~&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;使用上一个触发替换的字符串&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;\={Vim Script}&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;使用vim脚本的结果&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;C-r{register}&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;使用寄存器里面的内容&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;flag&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;g&lt;/td&gt;
-      &lt;td&gt;匹配一行的所有出现情况，作为横向（%是ex命令range,作为纵向）&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;c&lt;/td&gt;
-      &lt;td&gt;在替换每个内容时确认，替换，跳过，退出，替换退出，替换剩下所有退出，翻页等功能&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;替换时将搜索域留空默认使用当前匹配模式&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:let @/=string&lt;/code&gt; 相当于/string（除了在查找历史里面没用记录）&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:let @a=string&lt;/code&gt; 相当于将string放入寄存器a&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:%s//\=@a/g&lt;/code&gt;   &lt;code class=&quot;highlighter-rouge&quot;&gt;\=&lt;/code&gt;执行vim脚本，@从寄存器中取值，这三步相当于一次替换&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;g&amp;amp;&lt;/code&gt;相当于&lt;code class=&quot;highlighter-rouge&quot;&gt;:%s//~/&amp;amp;&lt;/code&gt;   对所有行以同样的标识（flag）重复上次的替换，&amp;amp;上次的标识&lt;/li&gt;
-  &lt;li&gt;可以对选中区域的内容实现替换&lt;/li&gt;
-  &lt;li&gt;&amp;amp;相当于:s ，执行上次替换，可以使用&amp;amp;&amp;amp;保持上次的flag&lt;/li&gt;
-  &lt;li&gt;可以利用子匹配(submatch)重新排序&lt;/li&gt;
-  &lt;li&gt;在vim脚本中必须使用submacht()方法引用子匹配&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;%s/\v(&amp;lt;dog&amp;gt;|&amp;lt;man&amp;gt;)/\={&quot;dog&quot;:&quot;man&quot;,&quot;man&quot;:&quot;dog&quot;}[submatch(1)]/g&lt;/code&gt;将dog和man单词交换（希望多年后我还能看懂）&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:vimgrep //g **/*&lt;/code&gt;  查找当前目录及以下匹配模式的文件，&lt;code class=&quot;highlighter-rouge&quot;&gt;:copen&lt;/code&gt;可以浏览匹配到的文件列表(quickfix)，并且可以通过回车和分裂窗口进行切换&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:cfdo&lt;/code&gt; 对quickfix中的文件进行统一修改，之前需先设置&lt;code class=&quot;highlighter-rouge&quot;&gt;:set hidden&lt;/code&gt;不保存可以切换到其他文件&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;|&lt;/code&gt; 在vim中代表将命令按顺序执行，在shell中代表管道符&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h5 id=&quot;全局命令&quot;&gt;全局命令&lt;/h5&gt;
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:[range] global[!] /{pattern}/ [cmd]&lt;/code&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;默认范围（range）是%,这一点与通常的命令不同，通常命令范围默认都是针对行的&lt;/li&gt;
-  &lt;li&gt;模式（pattern）是查找和替换中的一致，可以留空&lt;/li&gt;
-  &lt;li&gt;命令（cmd）可以是global的命令之外的任何命令,默认是print&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;global!&lt;/code&gt;和&lt;code class=&quot;highlighter-rouge&quot;&gt;vglobal&lt;/code&gt;将作用于不匹配的模式&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;g/re/p&lt;/code&gt;是这个命令的缩写模式，也是grep命令的来源&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;v/re/d&lt;/code&gt; 仅留下匹配的行，vglobal&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;g/re/y A&lt;/code&gt;  将内容追加到寄存器a中，可以存多行内容存到寄存器中，而小写a是覆盖，多行内容只会存最后一行，可以在执行之前&lt;code class=&quot;highlighter-rouge&quot;&gt;qaq&lt;/code&gt;清空寄存器a的内容&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;g/re/t$&lt;/code&gt; 将匹配内容复制到行尾&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:sort&lt;/code&gt; 对指定范围内的行首按照字母表排序&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:g/{/ .+1,/}/-1 sort&lt;/code&gt; 这个命令里面的内容都学过，功能是?&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;g/{start}/ .,{finish}&lt;/code&gt; [cmd] 通用模式&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Wed, 24 Apr 2019 10:26:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/vim_pattern/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/vim_pattern/</guid>
         
         <category>vim</category>
         
