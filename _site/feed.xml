@@ -6,8 +6,8 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 13 Jun 2019 15:55:06 +0800</pubDate>
-    <lastBuildDate>Thu, 13 Jun 2019 15:55:06 +0800</lastBuildDate>
+    <pubDate>Wed, 03 Jul 2019 16:29:59 +0800</pubDate>
+    <lastBuildDate>Wed, 03 Jul 2019 16:29:59 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
     
       <item>
@@ -33,32 +33,12 @@
       &lt;td&gt;根据yaml文件创建一个RC(ReplicationController), 或者Service, 取决于yaml文件中的kind属性&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get pods&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看Pod的创建情况&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get &amp;lt;resource&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;查看资源的大概情况,&lt;code class=&quot;highlighter-rouge&quot;&gt;-o yaml&lt;/code&gt;可以输出一个yaml格式。&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get rc&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看RC的情况&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get nodes&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看Node的情况&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get svc&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看服务的情况&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get deployments&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看部署状况&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get endpoints&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看切点情况&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get rs&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看Replica Set(新版本中的RC，支持集合Label selector)&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl describe &amp;lt;resource&amp;gt;&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;描述资源的详细信息&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
       &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl delete &amp;lt;rc或svc&amp;gt;&lt;/code&gt;&lt;/td&gt;
@@ -70,6 +50,11 @@
     &lt;/tr&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;resource可以为pods, rc, nodes, svc, deployments, endpoints(切点), rs(新版本中的RC，支持集合Label selector)等，一般单复数形式都可以&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-n&lt;/code&gt;命名空间，不写时为默认命名空间，系统命名空间为kube-system，使用可以查看一些系统的资源&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;h4 id=&quot;kubenetes组成&quot;&gt;kubenetes组成&lt;/h4&gt;
 
@@ -117,11 +102,27 @@
       &lt;li&gt;通过CPUUtilizationPercetage或者应用自定义度量指标来确定是否需要扩容或者缩容&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
+  &lt;li&gt;StatefulSet 有状态集群
+    &lt;ol&gt;
+      &lt;li&gt;类似Deployment,但用于有状态的集群，例如MySQL集群，MongoDB集群，Akka集群等&lt;/li&gt;
+      &lt;li&gt;建立的Pod有稳定，唯一的网络标识&lt;/li&gt;
+      &lt;li&gt;启停顺序是受控的&lt;/li&gt;
+      &lt;li&gt;使用PV或者PVC来做数据的持久化，PV为PersistentVolum, PVC为PersistentVolumeClaim&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
   &lt;li&gt;Service 服务
     &lt;ol&gt;
       &lt;li&gt;微服务，Pod和RC都是为了支持服务&lt;/li&gt;
       &lt;li&gt;NodeIp(每个节点物理网卡的IP地址), PodIp(虚拟的二层网络), ClusterIp(虚拟的IP,无法被ping,只能和Service Port组成一个具体的通信端口)&lt;/li&gt;
-      &lt;li&gt;PodIp和ClusterIp是无法在k8s集群外访问的，要想访问，就得使用NodePort类型的Service&lt;/li&gt;
+      &lt;li&gt;PodIp和ClusterIp是无法在k8s集群外访问的，要想访问，就得使用NodePort类型的Service,&lt;/li&gt;
+      &lt;li&gt;NodePort在k8s的集群的每个Node建立一个访问端口，我们只要访问任意一台Node就可以访问，但还需要一个负载均衡，可以将NodePort类型改为LoadBalancer，利用公有云提供的服务来实现负载均衡。&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Job 任务
+    &lt;ol&gt;
+      &lt;li&gt;批处理任务通常并行或者串行启动多个计算进程去处理一批工作项, 与RC, Deployment, RS类似，不过是一个特殊的Pod控制器&lt;/li&gt;
+      &lt;li&gt;Job控制的Pod是短暂运行的&lt;/li&gt;
+      &lt;li&gt;k8s的1.5版本后提供了CronJob&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
   &lt;li&gt;Volume 存储卷
@@ -130,9 +131,9 @@
       &lt;li&gt;和Pod生命周期相同，和容器生命周期无关&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
-  &lt;li&gt;Persistent Volume 网路存储
+  &lt;li&gt;Persistent Volume 网络存储
     &lt;ol&gt;
-      &lt;li&gt;每个Node都可以访问，独立于Pod之外&lt;/li&gt;
+      &lt;li&gt;每个Node都可以访问，独立于Pod之外，类似网盘&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
   &lt;li&gt;Namespace 命名空间
@@ -142,13 +143,17 @@
   &lt;/li&gt;
   &lt;li&gt;Annoation 注解
     &lt;ol&gt;
-      &lt;li&gt;用户定义的任意附加信息， 以便于外部工具查找&lt;/li&gt;
+      &lt;li&gt;和Label类似，Label具有严格的命名规则，Annoation是用户定义的任意附加信息， 以便于外部工具查找&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;ConfigMap
+    &lt;ol&gt;
+      &lt;li&gt;集中化的配置，解决了Docker容器只能使用环境变量或者共享文件的形式将一些配置传入容器内&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
-
 </description>
-        <pubDate>Thu, 13 Jun 2019 16:35:00 +0800</pubDate>
+        <pubDate>Wed, 03 Jul 2019 17:53:00 +0800</pubDate>
         <link>http://localhost:4000/posts/k8s_basic/</link>
         <guid isPermaLink="true">http://localhost:4000/posts/k8s_basic/</guid>
         
