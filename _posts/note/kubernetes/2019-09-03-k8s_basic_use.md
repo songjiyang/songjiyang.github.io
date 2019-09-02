@@ -21,6 +21,7 @@ kubernetes基础使用，创建一个Deployment,创建一个Service
 #### 创建一个Deployment
  - controllers/nginx-deployment.yaml
 
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -64,6 +65,7 @@ spec:
 #### 创建一个Service
 
 - service/nginx-service.yml
+
 
 ```yaml
 apiVersion: v1

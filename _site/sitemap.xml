@@ -3,9 +3,36 @@
 
   
   <url>
+    <loc>http://localhost:4000/posts/k8s_basic_use/</loc>
+    
+      <lastmod>2019-09-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
     <loc>http://localhost:4000/posts/k8s_basic/</loc>
     
-      <lastmod>2019-07-03</lastmod>
+      <lastmod>2019-09-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/mongodb_sharding/</loc>
+    
+      <lastmod>2019-09-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/mongodb_replication/</loc>
+    
+      <lastmod>2019-09-03</lastmod>
     
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
