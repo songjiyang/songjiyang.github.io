@@ -39,6 +39,7 @@ mongodb复制集相关
 
 mongo日志
 - mongodb复制集中的secondary接管primary时的日志
+
 ```
 2019-04-16T21:01:00.460+0800 I NETWORK  [LogicalSessionCacheRefresh] Starting new replica set monitor for rs0/192.168.0.105:3717,192.168.0.106:3717,192.168.0.99:3717
 2019-04-16T21:01:06.814+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 13ms

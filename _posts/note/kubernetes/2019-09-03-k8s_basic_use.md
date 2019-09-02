@@ -20,6 +20,7 @@ kubernetes基础使用，创建一个Deployment,创建一个Service
 
 #### 创建一个Deployment
  - controllers/nginx-deployment.yaml
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -56,13 +57,14 @@ spec:
 #### 问题
 
 1. Deployment的matchLabels必选能选到template的label,否则创建资源的时候会报错。==为什么==, 因为这个Deployment选择不到对应的pod，达不到要求的replica为3，所以会不停新建template的Pod。
-2. ==现在如何访问这个nginx==
+2. 现在如何访问这个nginx
 - `kubectl port-forward <podname> 80:80`，使用kubectl代理，这样只有拥有k8s集群权限才行，用不了k8s也访问不到
 - 建一个Service，下面介绍
 
 #### 创建一个Service
 
 - service/nginx-service.yml
+
 ```yaml
 apiVersion: v1
 kind: Service
