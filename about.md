@@ -2,7 +2,7 @@
 bg: "me.jpg"
 layout: page
 title: "About"
-crawlertitle: "Why and how this blog was created"
+crawlertitle: "没有热忱，世间便无进步"
 permalink: /about/
 summary: "没有热忱，世间便无进步"
 active: about
