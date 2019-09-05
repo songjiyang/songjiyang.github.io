@@ -6,9 +6,239 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 03 Sep 2019 00:24:15 +0800</pubDate>
-    <lastBuildDate>Tue, 03 Sep 2019 00:24:15 +0800</lastBuildDate>
+    <pubDate>Thu, 05 Sep 2019 11:46:39 +0800</pubDate>
+    <lastBuildDate>Thu, 05 Sep 2019 11:46:39 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
+    
+      <item>
+        <title>mongodb工具，安全，故障</title>
+        <description>&lt;p&gt;mongodb导入和导入工具，监控工具，授权认证，故障排除&lt;/p&gt;
+
+&lt;h3 id=&quot;安全&quot;&gt;安全&lt;/h3&gt;
+
+&lt;h4 id=&quot;用户&quot;&gt;用户&lt;/h4&gt;
+&lt;ul&gt;
+  &lt;li&gt;创建第一个用户&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;gt; db.createUser(
+... {
+... user: &quot;myUserAdmin&quot;,
+... pwd: &quot;passwd&quot;,
+... roles: [ &quot;userAdminAnyDatabase&quot;]
+... }
+... )
+Successfully added user: { &quot;user&quot; : &quot;myUserAdmin&quot;, &quot;roles&quot; : [ &quot;userAdminAnyDatabase&quot; ] }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;认证&quot;&gt;认证&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;在mongod启动时加入–auth参数开启登录验证&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;使用用户名和密码进行身份验证&lt;/p&gt;
+
+    &lt;p&gt;mongo -u “myUserAdmin” -p “passwd” –authenticationDatabase “admin”&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;authenticationDatabase表示创建用户使用的数据库，但不是指定该用户权限的。&lt;/li&gt;
+  &lt;li&gt;如果目的既是登陆test数据库，而用户也是test数据库中创建，那么可以不用写后面的参数 –authenticationDatabase&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;授权&quot;&gt;授权&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;权限 = 在哪里 + 做什么&lt;/p&gt;
+
+    &lt;p&gt;{resource:{db:”test”, collections: “”}, actions:[“find”, “update”]}&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;角色，一组权限的集合
+    &lt;ol&gt;
+      &lt;li&gt;read, 读取当前数据库中所有非系统集合&lt;/li&gt;
+      &lt;li&gt;readWrite, 读写当前数据库中所有非系统集合&lt;/li&gt;
+      &lt;li&gt;dbAdmin, 管理当前数据库&lt;/li&gt;
+      &lt;li&gt;userAdmin, 管理当前数据库中的用户和角色&lt;/li&gt;
+      &lt;li&gt;read/readWrite/dbAdmin/userAdminAnyDatabase 对所有数据库执行操作（只在admin数据库提供）&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;创建一个只能读取test数据库的用户&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;use test;
+db.createUser(
+    {
+        user: &quot;testReader&quot;,
+        pwd: &quot;passwd&quot;,
+        roles: [{role: &quot;read&quot;, db: &quot;test&quot;}]
+    }
+)
+
+Successfully added user: {
+	&quot;user&quot; : &quot;testReader&quot;,
+	&quot;roles&quot; : [
+		{
+			&quot;role&quot; : &quot;read&quot;,
+			&quot;db&quot; : &quot;test&quot;
+		}
+	]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;创建一个只能读取accounts集合的用户&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;use test;
+db.createRole(
+    {
+        role: &quot;readAccount&quot;,
+        privileges: [
+            {
+                resource: {
+                    db:&quot;test&quot;, 
+                    collection: &quot;accounts&quot;
+                },
+                actions: [&quot;find&quot;]
+            }
+        ],
+        roles: []
+    }
+)
+use test;
+db.createUser(
+    {
+        user: &quot;accountsReader&quot;,
+        pwd: &quot;passwd&quot;,
+        roles: [&quot;readAccount&quot;]
+    }
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;roles字段可以从已有角色中继承权限&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;工具&quot;&gt;工具&lt;/h2&gt;
+
+&lt;h4 id=&quot;数据导入导出&quot;&gt;数据导入导出&lt;/h4&gt;
+&lt;h5 id=&quot;mongoexport&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongoexport/&quot;&gt;mongoexport&lt;/a&gt;&lt;/h5&gt;
+&lt;h5 id=&quot;mongoimport&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongoimport/index.html&quot;&gt;mongoimport&lt;/a&gt;&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;upsertFileds 根据特定字段去对比从而选择去更新还是插入&lt;/li&gt;
+  &lt;li&gt;stopOnError 发送错误停止&lt;/li&gt;
+  &lt;li&gt;maintainInsertionOrder 维持csv的顺序导入&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;监控&quot;&gt;监控&lt;/h4&gt;
+
+&lt;h5 id=&quot;mongostat统计mongodb数据库当前的状态&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongostat/index.html&quot;&gt;mongostat&lt;/a&gt;，统计mongodb数据库当前的状态&lt;/h5&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;需要用户有clusterMonitor的角色&lt;/li&gt;
+  &lt;li&gt;可以指定打印间隔和次数&lt;/li&gt;
+  &lt;li&gt;o指定需要查看的指标
+    &lt;ol&gt;
+      &lt;li&gt;commman - 每秒执行的命令数&lt;/li&gt;
+      &lt;li&gt;dirty, used - 数据库引擎缓存的使用量百分比&lt;/li&gt;
+      &lt;li&gt;vsize - 虚拟内存使用量（MB)&lt;/li&gt;
+      &lt;li&gt;res - 常驻内存使用量&lt;/li&gt;
+      &lt;li&gt;conn - 连接数&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;mongotop显示每个集合上的读写时间&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongotop/index.html&quot;&gt;mongotop&lt;/a&gt;,显示每个集合上的读写时间&lt;/h5&gt;
+
+&lt;h2 id=&quot;故障&quot;&gt;故障&lt;/h2&gt;
+
+&lt;h5 id=&quot;响应时间过长&quot;&gt;响应时间过长&lt;/h5&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;合适的索引，使用explain()查看索引的有效性&lt;/li&gt;
+  &lt;li&gt;工作集超出RAM的大小，使用mongostat查看服务的状态，used百分比远远大过dirty的百分比时，表示mongo内存不够使用&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;连接失败&quot;&gt;连接失败&lt;/h5&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;默认情况下，mongod进程可以支持多达65536个连接，不恰当的&lt;strong&gt;配置&lt;/strong&gt;可能限制连接数
+    &lt;ol&gt;
+      &lt;li&gt;db.serverStatus().connections可查看连接数&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;ulimt -a配置中间的open files也会限制mongodb的连接数&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Thu, 05 Sep 2019 10:00:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/mongodb_tool_security/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_tool_security/</guid>
+        
+        <category>mongodb</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
+    
+      <item>
+        <title>mongodb技巧</title>
+        <description>&lt;p&gt;mongodb的一些技巧&lt;/p&gt;
+
+&lt;h2 id=&quot;按日期分组&quot;&gt;按日期分组&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;要分组的日期是Date类型的&lt;/li&gt;
+  &lt;li&gt;注意timezone, +0800代表中国时区&lt;/li&gt;
+  &lt;li&gt;group的_id可以进行转字符串，然后连接处理&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;db.suggestions.aggregate([
+    {
+        $project: {
+          year: {$year: {date:'$submitDate', timezone:'+0800'}},
+          month: {$month: {date:'$submitDate', timezone:'+0800'}},
+          dayOfMonth: {$dayOfMonth: {date:'$submitDate', timezone:'+0800'}},
+          submitDate:1
+        }
+    },
+    {
+        $group: {
+            _id:{year:'$year', month:'$month', day:'$dayOfMonth'},
+            
+            count: {
+                $sum: 1
+            }
+        }
+    },
+    {   
+        $sort : { _id : 1 }
+    }   
+])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;要分组的日期是timeStamp，并且为string, 网上查找的方法&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;db.getCollection('wechat_message').aggregate(  
+    [     
+        {   $project : { day : {$substr: [&quot;$sendTime&quot;, 0, 10] }}},          
+        {   $group   : { _id : &quot;$day&quot;,  number : { $sum : 1 }}},  
+        {   $sort    : { _id : -1 }}          
+    ]  
+)  
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+        <pubDate>Thu, 05 Sep 2019 10:00:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/mongodb_skill/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_skill/</guid>
+        
+        <category>mongodb</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
     
       <item>
         <title>kubernetes基础使用</title>
@@ -354,164 +584,6 @@
         <pubDate>Tue, 03 Sep 2019 10:00:00 +0800</pubDate>
         <link>http://localhost:4000/posts/mongodb_sharding/</link>
         <guid isPermaLink="true">http://localhost:4000/posts/mongodb_sharding/</guid>
-        
-        <category>mongodb</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>mongodb复制集</title>
-        <description>&lt;p&gt;mongodb复制集相关&lt;/p&gt;
-
-&lt;h4 id=&quot;why-为什么要使用复制集&quot;&gt;Why? 为什么要使用复制集&lt;/h4&gt;
-&lt;ul&gt;
-  &lt;li&gt;高可用性（HA）&lt;/li&gt;
-  &lt;li&gt;数据安全&lt;/li&gt;
-  &lt;li&gt;分流/分工&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;复制集结构&quot;&gt;复制集结构&lt;/h4&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;一个primary,多个secondry&lt;/li&gt;
-  &lt;li&gt;primary负责写读请求，副节点从主节点复制数据，secondry可以负责读请求，但可能会有数据不一致的情况，因为副节点从主节点复制数据会有一定延迟&lt;/li&gt;
-  &lt;li&gt;每个节点之间互相发送心跳请求，默认每隔2秒发送一次，如果10秒则请求超时&lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;复制集最多可以有50个节点（因为增加节点会使心跳请求成平方的增加）&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;当primary down掉时，候选节点会发起选举，当投票赞成结果超过半数时，会将候选节点选为主节点。投票节点的评判标准是，查看该候选节点与之前的主节点的同步状态是否超过自身和之前的主节点的同步状态&lt;/li&gt;
-  &lt;li&gt;复制集最多有7个投票节点&lt;/li&gt;
-  &lt;li&gt;触发选举的事件
-    &lt;ol&gt;
-      &lt;li&gt;主节点和副节点之间的心跳请求超时&lt;/li&gt;
-      &lt;li&gt;复制集初始化&lt;/li&gt;
-      &lt;li&gt;新节点加入复制集&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;投票机节点，没有数据，可以投票，不能成为主节点&lt;/li&gt;
-  &lt;li&gt;新节点通过oplog来从主节点复制数据，复制操作记录。&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;mongo日志&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;mongodb复制集中的secondary接管primary时的日志&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;2019-04-16T21:01:00.460+0800 I NETWORK  [LogicalSessionCacheRefresh] Starting new replica set monitor for rs0/192.168.0.105:3717,192.168.0.106:3717,192.168.0.99:3717
-2019-04-16T21:01:06.814+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 13ms
-2019-04-16T21:01:13.279+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 51ms
-2019-04-16T21:01:18.380+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 14ms
-2019-04-16T21:01:29.046+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 2ms
-2019-04-16T21:01:36.566+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 1ms
-2019-04-16T21:01:43.937+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 2ms
-2019-04-16T21:01:52.939+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 1ms
-2019-04-16T21:02:01.244+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 1ms
-2019-04-16T21:02:08.904+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 2ms
-2019-04-16T21:02:15.546+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 1ms
-2019-04-16T21:02:22.607+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 2ms
-2019-04-16T21:02:29.310+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 1ms
-2019-04-16T21:02:37.171+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 3ms
-2019-04-16T21:02:44.165+0800 I STORAGE  [WT OplogTruncaterThread: local.oplog.rs] WiredTiger record store oplog truncation finished in: 39ms
-2019-04-16T21:02:46.361+0800 I REPL     [replexec-328] Scheduling catchup takeover at 2019-04-16T21:03:16.361+0800
-2019-04-16T21:02:47.753+0800 I REPL     [replexec-327] Canceling catchup takeover callback
-2019-04-16T21:02:54.362+0800 I REPL     [replexec-332] Scheduling catchup takeover at 2019-04-16T21:03:24.362+0800
-2019-04-16T21:02:55.753+0800 I REPL     [replexec-332] Canceling catchup takeover callback
-2019-04-16T21:02:56.418+0800 I ASIO     [RS] Ending connection to host 192.168.0.99:3717 due to bad connection status; 1 connections to that host remain open
-2019-04-16T21:02:56.418+0800 I REPL     [replication-204] Restarting oplog query due to error: HostUnreachable: error in fetcher batch callback :: caused by :: Connection was closed. Last fetched optime (with hash): { ts: Timestamp(1555419775, 854), t: 5 }[-6290649860941869225]. Restarts remaining: 1
-2019-04-16T21:02:56.418+0800 I REPL     [replication-204] Scheduled new oplog query Fetcher source: 192.168.0.99:3717 database: local query: { find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp(1555419775, 854) } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 2000, batchSize: 13981010, term: 5, readConcern: { afterClusterTime: Timestamp(1555419775, 854) } } query metadata: { $replData: 1, $oplogQueryData: 1, $readPreference: { mode: &quot;secondaryPreferred&quot; } } active: 1 findNetworkTimeout: 7000ms getMoreNetworkTimeout: 10000ms shutting down?: 0 first: 1 firstCommandScheduler: RemoteCommandRetryScheduler request: RemoteCommand 4558836 -- target:192.168.0.99:3717 db:local cmd:{ find: &quot;oplog.rs&quot;, filter: { ts: { $gte: Timestamp(1555419775, 854) } }, tailable: true, oplogReplay: true, awaitData: true, maxTimeMS: 2000, batchSize: 13981010, term: 5, readConcern: { afterClusterTime: Timestamp(1555419775, 854) } } active: 1 callbackHandle.valid: 1 callbackHandle.cancelled: 0 attempt: 1 retryPolicy: RetryPolicyImpl maxAttempts: 1 maxTimeMillis: -1ms
-2019-04-16T21:02:56.418+0800 I NETWORK  [conn205] end connection 192.168.0.99:37808 (21 connections now open)
-2019-04-16T21:02:56.418+0800 I ASIO     [Replication] Ending connection to host 192.168.0.99:3717 due to bad connection status; 0 connections to that host remain open
-2019-04-16T21:02:56.418+0800 I ASIO     [RS] Connecting to 192.168.0.99:3717
-2019-04-16T21:02:56.418+0800 I REPL_HB  [replexec-328] Error in heartbeat (requestId: 4558835) to 192.168.0.99:3717, response status: HostUnreachable: Connection was closed
-2019-04-16T21:02:56.418+0800 I REPL     [SyncSourceFeedback] SyncSourceFeedback error sending update to 192.168.0.99:3717: HostUnreachable: Connection was closed
-
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-</description>
-        <pubDate>Tue, 03 Sep 2019 10:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/mongodb_replication/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_replication/</guid>
-        
-        <category>mongodb</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>mongodb索引</title>
-        <description>&lt;p&gt;mongodb的索引的基本使用&lt;/p&gt;
-
-&lt;h2 id=&quot;索引&quot;&gt;索引&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;索引分为单键索引和复合索引&lt;/li&gt;
-  &lt;li&gt;mongodb采用b-tree做索引&lt;/li&gt;
-  &lt;li&gt;复合索引只能支持前缀子查询&lt;/li&gt;
-  &lt;li&gt;explain()函数可以进行查询分析&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;创建索引&quot;&gt;创建索引&lt;/h4&gt;
-
-&lt;p&gt;db.collection.createIndex(&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;keys&amp;gt;&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;options&amp;gt;&lt;/code&gt;), &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;keys&amp;gt;&lt;/code&gt;文档指定了创建索引的字段&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;单键索引keys文档只有一个字段&lt;/li&gt;
-  &lt;li&gt;复合索引keys文档有多个字段&lt;/li&gt;
-  &lt;li&gt;多键索引，对一个数组字段设置索引&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;查询索引&quot;&gt;查询索引&lt;/h4&gt;
-
-&lt;p&gt;db.collection.getIndexes()&lt;/p&gt;
-
-&lt;h4 id=&quot;索引的效果&quot;&gt;索引的效果&lt;/h4&gt;
-
-&lt;p&gt;db.collection.explain().&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;method(...)&amp;gt;&lt;/code&gt;,&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;查看winningPlan的stage， COLLSCAN表示线性扫描，IXSCAN代表索引扫描&lt;/li&gt;
-  &lt;li&gt;当查询到索引且只要返回索引字段，则不用去FETCH，最大化利用了索引&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;删除索引&quot;&gt;删除索引&lt;/h4&gt;
-
-&lt;p&gt;db.collection.dropIndex()&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;如果要更改某些字段上已经创建的索引，必须首先删除原有索引，再重新创建索引，否则，新索引不会包含原有文档&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;索引的特性&quot;&gt;索引的特性&lt;/h4&gt;
-
-&lt;h5 id=&quot;索引的唯一性&quot;&gt;索引的唯一性&lt;/h5&gt;
-&lt;ul&gt;
-  &lt;li&gt;{unique: true}&lt;/li&gt;
-  &lt;li&gt;如果某个字段出现了重复值，就不可以在字段上创建唯一索引&lt;/li&gt;
-  &lt;li&gt;如果新增的文档不包含唯一性索引字段，只有第一篇缺失该字段的文档可以被写入数据库，索引中该文档的键值被默认为null&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h5 id=&quot;索引的稀疏性-只将包含索引键字段的文档加入索引中&quot;&gt;索引的稀疏性 （只将包含索引键字段的文档加入索引中)&lt;/h5&gt;
-&lt;ul&gt;
-  &lt;li&gt;{sparse: true}&lt;/li&gt;
-  &lt;li&gt;如果同一个索引既具有唯一性，又具有稀疏性，那么可以存储多篇缺失索引字段的文档&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h5 id=&quot;索引的生存时间-针对日期字段设定生存时间自动删除超过生存时间的文档&quot;&gt;索引的生存时间 （针对日期字段，设定生存时间，自动删除超过生存时间的文档）&lt;/h5&gt;
-&lt;ul&gt;
-  &lt;li&gt;{expireAfterSeconds: 20}&lt;/li&gt;
-  &lt;li&gt;复合键索引不具备生存时间特性&lt;/li&gt;
-  &lt;li&gt;当索引键是包含日期元素的数组字段时，数组中的最小日期将被用来计算文档是否已经过期&lt;/li&gt;
-  &lt;li&gt;过期删除操作有一定的延迟&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Wed, 03 Jul 2019 17:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/mongodb_index/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_index/</guid>
         
         <category>mongodb</category>
         
