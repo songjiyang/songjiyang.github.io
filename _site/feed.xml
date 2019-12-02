@@ -6,9 +6,231 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 05 Sep 2019 11:46:39 +0800</pubDate>
-    <lastBuildDate>Thu, 05 Sep 2019 11:46:39 +0800</lastBuildDate>
-    <generator>Jekyll v3.8.5</generator>
+    <pubDate>Mon, 02 Dec 2019 23:14:08 +0800</pubDate>
+    <lastBuildDate>Mon, 02 Dec 2019 23:14:08 +0800</lastBuildDate>
+    <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>golang基本类型</title>
+        <description>&lt;p&gt;golang基本类型， number, string, unicode, utf-8的基础知识&lt;/p&gt;
+
+&lt;p&gt;[toc]&lt;/p&gt;
+&lt;h1 id=&quot;四种类型&quot;&gt;四种类型&lt;/h1&gt;
+&lt;ul&gt;
+  &lt;li&gt;基本类型，numbers, strings, booleans&lt;/li&gt;
+  &lt;li&gt;聚合类型，arrays, structs&lt;/li&gt;
+  &lt;li&gt;引用类型，pointers, slices, maps, functions, channels&lt;/li&gt;
+  &lt;li&gt;接口类型，interface&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;integer&quot;&gt;Integer&lt;/h1&gt;
+&lt;p&gt;int8, int16, int32, int64&lt;/p&gt;
+
+&lt;p&gt;uint8, uint16, uint32, uint64&lt;/p&gt;
+
+&lt;p&gt;不同尺寸和有无符号的int&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;int和uint, 具体大小取决于编译器&lt;/li&gt;
+  &lt;li&gt;rune, int32的同义词，很方便表示一个Unicode码点&lt;/li&gt;
+  &lt;li&gt;byte, int8的同义词，重点强调是一系列的原生数据而不是一个值&lt;/li&gt;
+  &lt;li&gt;uintptr, 大小不确定，但足以装下指针的值，通常用于底层编码，例如Go使用C库&lt;/li&gt;
+  &lt;li&gt;int和它们的兄弟不是一种类型，需要显示转换，尽管int的底层是32位和int32一致。&lt;/li&gt;
+  &lt;li&gt;数学运算符，逻辑操作符，比较操作符, 位操作符，这些和其他语言的基本相同，下面是特殊的几个
+    &lt;ol&gt;
+      &lt;li&gt;%, 取余操作符， 结果的符合和被除数一致， -5%3和-5%-3的结果都是-2&lt;/li&gt;
+      &lt;li&gt;&amp;amp;^, 位清除操作， z = x &amp;amp;^ y   当y位1时，z位位0，否则和x的一样, 顾名思义，根据y中为1的位去清除x中的位&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;左移时空位填0，右移时空位填符号位，5右移1位是2，所以负数右移时要谨慎，-5右移1位是-3，计算机底层使用补码来存，负数的补码是对应正数的二进制按位取反再加1，正数的补码是正数的二进制&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;小知识点： &amp;amp;位操作可以用来检测某个位是不是1, 5 &amp;amp; 1 大于 0 能看出5的最右一位是1，可以通过右移5或者左移1来探测5的二进制里面有多少个1&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;整型字面量可以是任何长度和类型的，（字面量的意思就是&lt;code class=&quot;highlighter-rouge&quot;&gt;a=5&lt;/code&gt;,里面的5就是字面量）0开头的是八进制，0x开头的是十六进制，八进制多用于文件权限,十六进制多强调数字的位而不是值&lt;/li&gt;
+  &lt;li&gt;使用fmt.Printf的%d,%o,%x来输出十进制，八进制和十六进制&lt;/li&gt;
+  &lt;li&gt;rune字面量是被单引号包起来的单个字符，可以写入ascii码&lt;code class=&quot;highlighter-rouge&quot;&gt;a&lt;/code&gt;，也可以写入任意unicode码点例如&lt;code class=&quot;highlighter-rouge&quot;&gt;国&lt;/code&gt;, 类型是int32, 可以使用fmt.Printf的%d,%c,%q来输出十进制，字符，和引号引起来的字符&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;浮点数floating-point-numbers&quot;&gt;浮点数Floating-Point Numbers&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;float32和float64, float32提供大约6位小数精度，float64提供大约15位小数精度&lt;/li&gt;
+  &lt;li&gt;特别大的数或者特别小的数应该用科学计数法&lt;/li&gt;
+  &lt;li&gt;特殊数值0,-0,+Inf,-Inf,NaN, 任何和NaN的比较都是false&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;复数&quot;&gt;复数&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;complex64和complex128,&lt;/li&gt;
+  &lt;li&gt;complex函数构建复数，real和imag函数去复数的实数和虚数&lt;/li&gt;
+  &lt;li&gt;一个浮点字面量跟一个i就变成一个虚数字面量，例如3i,是实数为0的复数&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;布尔值&quot;&gt;布尔值&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;true和false&lt;/li&gt;
+  &lt;li&gt;
+    &lt;table&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;
+          &lt;td&gt;!，&amp;amp;&amp;amp;，&lt;/td&gt;
+          &lt;td&gt; &lt;/td&gt;
+          &lt;td&gt;， &amp;amp;&amp;amp;的优先级高于&lt;/td&gt;
+          &lt;td&gt; &lt;/td&gt;
+          &lt;td&gt;, !是单元操作符&lt;/td&gt;
+        &lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/li&gt;
+  &lt;li&gt;逻辑布尔表达式具有短路的表现，当前面的表达式足以确定真假的时候，就不在执行后面的表达式&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;字符串&quot;&gt;字符串&lt;/h1&gt;
+
+&lt;p&gt;字符串是不可变的一序列字节，可以包含任意数据，甚至0个字节，通常包含人类可读的文本，这些文本被解析为Utf8编码的码点（rune)&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;len方法返回字符串字节的个数，而不是rune，可以通过索引访问指定位置的字节&lt;/li&gt;
+  &lt;li&gt;substring操作，s[i:j]返回新字符串包含i到j(不含j)的字节，长度为j-i, i和j都可以省略，从0或者到结尾，和python的切片类似。&lt;/li&gt;
+  &lt;li&gt;+操作将两个字符串进行拼接返回一个新字符串&lt;/li&gt;
+  &lt;li&gt;可以使用==或者&amp;lt;进行比较，将一个字节一个字节进行比较&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;字符串的不可变性，保证了字符串的拷贝共享一份内存是安全的，所以拷贝任意长度的字符串和获取子串都是廉价的操作，它们共享着相同的内存，不会重新分配内存&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;字符串字面量&quot;&gt;字符串字面量&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;go源文件被uft8编码，所以可以在文件中直接写unicode字符&lt;/li&gt;
+  &lt;li&gt;使用\来进行转义&lt;/li&gt;
+  &lt;li&gt;``包裹的是原生字符串字面量，其中的内容不会被转义，适合写正则，html，json等字符串&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;unicode&quot;&gt;Unicode&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Unicode是一个收集世界上数中语言和符合的编码表，正如ASCII一样，将字符和数字进行对应起来，计算机存储数字，在需要展示给人的时候转换为字符&lt;/li&gt;
+  &lt;li&gt;Unicode的每个符号对应的数字的值称为Unicode码点(Unicode code point), 在Go里面就是rune&lt;/li&gt;
+  &lt;li&gt;Unicode中如果用rune（int32)来存储的话，是非常简单和正规的，这样所有字符的长度都占4个字节，然而，我们平常大多使用的字符还是2个字节就能表示的了，或者1个字节能表示的了（比如ASCII)，所有字符占4个字节会浪费很多空间，所以就出现了UTF-8编码&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;utf-8&quot;&gt;UTF-8&lt;/h2&gt;
+
+&lt;p&gt;UTF-8是一个将Unicode码点转换为不同长度的编码，它使用1到4个字节来存储一个字符，那么这我曾经想过的一个问题是，既然一个字符的长度不同，那么在一个字节序列里面，它是如何判断边界的呢，它怎么判断这两个字节是这个字符，而这一个字节是这个字符？utf-8是这么做的，它用字节里面的高位（high-order bit)来标识下面跟着多少个字节，比如0xxxxx这样的代表着是ASCII码，下一个字节将是一个新的字符。110xxxx代表后面还跟随着两个字节，后面跟随的两个字节都是以10开头的。这样就能使用utf-8编码来节省空间。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;utf8有很多特性，使我们不用对它转为unicode也能进行获取子串，比较，从左到右读取，不必担心上下文。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Unicode&lt;/th&gt;
+      &lt;th&gt;Utf-8&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;000000-00007F&lt;/td&gt;
+      &lt;td&gt;0xxxxxxx&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;000080-0007FF&lt;/td&gt;
+      &lt;td&gt;110xxxxx 10xxxxxx&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;000800-00FFFF&lt;/td&gt;
+      &lt;td&gt;1110xxxx 10xxxxxx 10xxxxxx&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;010000-10FFFF&lt;/td&gt;
+      &lt;td&gt;11110xxx 10xxxxxx 10xxxxxx 10xxxxxx&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;许多unicode不容易写，所以go允许我们直接写数值码点，下面都是6个字节的字面量(看utf8很容易看出是6个字节，十六进制两个数是一个字节)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;世界&quot;
+&quot;\xe4\xb8\x96\xe7\x95\x8c&quot;   utf8
+&quot;\u4e16\u754c&quot;               16 bit unicode
+&quot;\U00004e16\U0000754c&quot;       32 bit unicode
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;下面都是rune字面量，256内的值可以用单个十六进制来表示，&lt;code class=&quot;highlighter-rouge&quot;&gt;\xe4\xb8\x96&lt;/code&gt;虽然是一个utf8编码的码点，但不是一个有效的rune字面量
+```
+‘世’, ‘\u4e16’, ‘\U00004e16’
+‘\x41’&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;‘\xe4\xb8\x96’ // 不是rune字面量&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+- 对于字符串直接使用索引遍历，遍历的是字节，而可用使用range来遍历rune, utf8.RuneCountInString可以返回某个字节rune的个数
+- 当utf8在解码时碰到错误的字节会使用`\uFFFD`来代替，是一个�这样的符号，当碰到了这样的符号，说明其他系统传过来的字节编码可能是不清楚的
+- rune和string相互转化
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;s:=”哈哈”
+r:=[]rune(s)   // string =&amp;gt; rune utf8 decode
+string(r)      // rune =&amp;gt; string utf8 encode
+string(65)     // “A”  integer =&amp;gt; string
+string(0x4eac) // “京”  0x4eac也是integer字面量
+string(1234567)// � 无效&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+## 字符和字节切片
+
+- 四个重要的标准包
+    1. strings,对字符串基本的查找，替换，比较，去空，分割，结合操作
+    2. bytes，对[]byte有相同的操作
+    3. strconv，负责boolean, int, float等类型转换到string
+    4. unicode, 对rune的各种操作
+- 因为string是不可变的，所以当想通过不断累积的方式获取新的string需要不停的分配内存，使用bytes.Buffer效率更好
+- 下面的方式可以将string和[]byte互转，在转化的过程中，重新分配内存和拷贝是必要的，因为[]byte是可以改变的
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;s := “abc”
+b := []byte(s)
+s2 := string(b)&lt;/p&gt;
+
+&lt;p&gt;```&lt;/p&gt;
+
+&lt;h2 id=&quot;数字和字符串转换&quot;&gt;数字和字符串转换&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;两种将数字转换为字符串的方式，fmt.Sprintf和strconv.Itoa&lt;/li&gt;
+  &lt;li&gt;strconv.FormatInt可以将数字转换为不同的进制，fmt.Sprintf的%b, %d, %u, %x也可以将数字转换为特定的进制，而且还可以加入一些额外的信息&lt;/li&gt;
+  &lt;li&gt;strconv.Atoi和strconv.ParseInt可以将字符串的数字转换为数字，ParseInt可以指定进制和返回的尺寸&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;常量&quot;&gt;常量&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;在编译时期就能确定的值&lt;/li&gt;
+  &lt;li&gt;常量的类型既可以显示声明，也可以根据值来进行推断&lt;/li&gt;
+  &lt;li&gt;iota, 常量生成器，在常量变量自动生成自动增长的值，声明一些规律的常量很好用，比如周一到周日，KiB,MiB,GiB这些单位。iota依赖左移和右移运算符来完成某些操作，所以对于KB,MB这些值是1000的是无法用iota声明的（KiB和KB的区别，一个是1024,一个是1000，但之前学习的时候KB指的是1024， 默认KB是KiB)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;无类型常量&quot;&gt;无类型常量&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;常量是可以无类型的，无类型意思就是类型在用的时候才显式或者隐式转换，比如0这个常量，赋值给int，它就是int类型，赋值给float64, 它就是float64类型&lt;/li&gt;
+  &lt;li&gt;六种无类型常量，无类型布尔，无类型整形，无类型rune, 无类型float, 无类型复数，无类型字符串&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Mon, 02 Dec 2019 12:00:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/basic_type/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/basic_type/</guid>
+        
+        <category>golang</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
     
       <item>
         <title>mongodb工具，安全，故障</title>
@@ -258,7 +480,7 @@ db.createUser(
   &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
 &lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;replicas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;3&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;replicas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;
   &lt;span class=&quot;na&quot;&gt;selector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
     &lt;span class=&quot;na&quot;&gt;matchLabels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
@@ -271,7 +493,7 @@ db.createUser(
       &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
         &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
         &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;containerPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;80&lt;/span&gt;
+        &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;containerPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h5 id=&quot;必需字段&quot;&gt;必需字段&lt;/h5&gt;
@@ -313,9 +535,9 @@ db.createUser(
   &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
     &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;http&lt;/span&gt;
       &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;TCP&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;80&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;targetPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;80&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;nodePort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;31100&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;targetPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;nodePort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;31100&lt;/span&gt;
   &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;NodePort&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -503,89 +725,6 @@ db.createUser(
         <guid isPermaLink="true">http://localhost:4000/posts/k8s_basic/</guid>
         
         <category>kubernetes</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>mongodb分片</title>
-        <description>&lt;p&gt;mongodb分片概念及组成&lt;/p&gt;
-
-&lt;h4 id=&quot;概念&quot;&gt;概念&lt;/h4&gt;
-&lt;p&gt;mongodb横向扩展，将数据存储到不同的地方。&lt;/p&gt;
-
-&lt;h4 id=&quot;组件&quot;&gt;组件&lt;/h4&gt;
-
-&lt;h6 id=&quot;mongos-配置服务器数据分片&quot;&gt;mongos, 配置服务器，数据分片&lt;/h6&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;每个分片存储一部分数据，可以部署复制集&lt;/li&gt;
-  &lt;li&gt;mongos路由可以将客户请求发生至相关的分片&lt;/li&gt;
-  &lt;li&gt;配置服务器保持集群配置和元数据，可以部署为复制集&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h6 id=&quot;主分片&quot;&gt;主分片&lt;/h6&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;集群中的每个&lt;strong&gt;数据库&lt;/strong&gt;会选择一个分片作为主分片&lt;/li&gt;
-  &lt;li&gt;主分片存储所有不需要分片的集合&lt;/li&gt;
-  &lt;li&gt;创建数据库时，数据最少的分片被选为主分片&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h6 id=&quot;分片片键&quot;&gt;分片片键&lt;/h6&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;片键值被用来将集合中的文档划分为数据段&lt;/li&gt;
-  &lt;li&gt;片键必须对应一个索引或索引前缀（单键或复合键）&lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;可以使用片键值的哈希值来生成哈希片键&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;片键值的范围更广（可使用复合片键扩大范围）&lt;/li&gt;
-  &lt;li&gt;片键值的分布更平衡（可使用复合片键平衡分布）&lt;/li&gt;
-  &lt;li&gt;片键值不要单向增大/减小（可使用哈希片键）&lt;/li&gt;
-  &lt;li&gt;片键是无法修改的&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h6 id=&quot;配置服务器&quot;&gt;配置服务器&lt;/h6&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;存储各分片数据段列表和数据段范围&lt;/li&gt;
-  &lt;li&gt;存储你集群的认证和授权配置&lt;/li&gt;
-  &lt;li&gt;不同的集群不要共用配置服务器&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h6 id=&quot;mongos&quot;&gt;mongos&lt;/h6&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;客户请求应发给mongos,而不是分片服务器&lt;/li&gt;
-  &lt;li&gt;当查询包含分片片键时，mongos将查询发送到指定分片&lt;/li&gt;
-  &lt;li&gt;否则，mongos将查询发送到所有分片，并汇总所有查询结果&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;动态平衡&quot;&gt;动态平衡&lt;/h4&gt;
-
-&lt;h6 id=&quot;数据段分裂&quot;&gt;数据段分裂&lt;/h6&gt;
-&lt;ul&gt;
-  &lt;li&gt;当数据段尺寸过大或包含过多文档时触发数据段分裂&lt;/li&gt;
-  &lt;li&gt;只有新增/更新文档时才可能自动触发数据段分裂&lt;/li&gt;
-  &lt;li&gt;数据段分裂通过更新元数据来实现，成本比较低&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h6 id=&quot;集群的平衡&quot;&gt;集群的平衡&lt;/h6&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;后台运行的平衡器负责监视和调整集群的平衡&lt;/li&gt;
-  &lt;li&gt;当最大和最小分片之间的数据段数量相差过大时触发&lt;/li&gt;
-  &lt;li&gt;集群中添加或移除分片时也会触发&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Tue, 03 Sep 2019 10:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/mongodb_sharding/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_sharding/</guid>
-        
-        <category>mongodb</category>
         
         
         <category>posts</category>
