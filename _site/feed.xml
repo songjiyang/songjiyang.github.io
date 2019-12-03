@@ -6,15 +6,160 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 02 Dec 2019 23:14:08 +0800</pubDate>
-    <lastBuildDate>Mon, 02 Dec 2019 23:14:08 +0800</lastBuildDate>
+    <pubDate>Tue, 03 Dec 2019 12:03:00 +0800</pubDate>
+    <lastBuildDate>Tue, 03 Dec 2019 12:03:00 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>5.1.1版本elasticsearch中英文排序</title>
+        <description>&lt;p&gt;5.1.1版本elasticsearch中英文排序问题排查及解决&lt;/p&gt;
+
+&lt;h1 id=&quot;环境&quot;&gt;环境&lt;/h1&gt;
+&lt;ul&gt;
+  &lt;li&gt;elasticsearch：5.1.1&lt;/li&gt;
+  &lt;li&gt;分词插件mmseg: 5.1.1&lt;/li&gt;
+  &lt;li&gt;拼音插件pinyin: 5.1.1&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;配置&quot;&gt;配置&lt;/h1&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;analyzer&quot;: {
+          &quot;pinyin_raw&quot;: {
+            &quot;type&quot;: &quot;pinyin&quot;,
+            &quot;keep_first_letter&quot;: false,
+            &quot;keep_full_pinyin&quot;: false,
+            &quot;keep_joined_full_pinyin&quot;: true,
+            &quot;keep_none_chinese_in_joined_full_pinyin&quot;: true,
+            &quot;keep_none_chinese_in_first_letter&quot;: true,
+            &quot;none_chinese_pinyin_tokenize&quot;: false,
+            &quot;lowercase&quot;: true
+          }
+          ...
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;需求&quot;&gt;需求&lt;/h1&gt;
+&lt;p&gt;想对文件名进行按照字典顺序排序，文件名有中文和英文，中文使用pinyin插件转化为拼音&lt;/p&gt;
+
+&lt;h1 id=&quot;问题&quot;&gt;问题&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;纯英文或纯数字混合分词结果多一个空格&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; http://ec2-52-81-100-48.cn-north-1.compute.amazonaws.com.cn:9200/test_new/_analyze?text=36kr&amp;amp;analyzer=pinyin_raw
+ 
+ 
+ {
+    &quot;tokens&quot;: [
+        {
+            &quot;token&quot;: &quot;36kr&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 3,
+            &quot;type&quot;: &quot;word&quot;,
+            &quot;position&quot;: 0
+        },
+        {
+            &quot;token&quot;: &quot;&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 0,
+            &quot;type&quot;: &quot;word&quot;,
+            &quot;position&quot;: 1
+        }
+    ]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;英文和中文混合时，不能正确拼接在一起, 且英文总是排在最前面&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://ec2-52-81-100-48.cn-north-1.compute.amazonaws.com.cn:9200/test_new/_analyze?text=哈哈dc&amp;amp;analyzer=pinyin_raw
+
+{
+    &quot;tokens&quot;: [
+        {
+            &quot;token&quot;: &quot;dc&quot;,
+            &quot;start_offset&quot;: 1,
+            &quot;end_offset&quot;: 3,
+            &quot;type&quot;: &quot;word&quot;,
+            &quot;position&quot;: 0
+        },
+        {
+            &quot;token&quot;: &quot;haha&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 4,
+            &quot;type&quot;: &quot;word&quot;,
+            &quot;position&quot;: 1
+        }
+    ]
+}
+
+本来应该是hahadc
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;解决过程&quot;&gt;解决过程&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;问题1之前pinyin插件的issue里面有人提到过，增加一个空白过滤器就可以去掉这个空白字符 &lt;a href=&quot;https://github.com/medcl/elasticsearch-analysis-pinyin/issues/163&quot;&gt;issue&lt;/a&gt;, 我自己也尝试过有效，但这个过滤器可以不加，升级es可以解决，所以下面测试的配置还是上面的配置。&lt;/li&gt;
+  &lt;li&gt;问题2查看pinyin插件的配置文档看到keep_none_chinese_in_joined_full_pinyin这个配置会将非中文和英文连接起来，但结果却没有，经过排查，发现pinyin插件5.1.1是不支持这个参数，由5.2.0的relase的commit可以看出是在这个版本才支持keep_none_chinese_in_joined_full_pinyin &lt;a href=&quot;https://github.com/medcl/elasticsearch-analysis-pinyin/compare/v5.2.0...master&quot;&gt;pinyin插件5.2.0commit记录&lt;/a&gt;, 并且解决了&lt;a href=&quot;https://github.com/medcl/elasticsearch-analysis-pinyin/issues/80&quot;&gt;#80issue&lt;/a&gt;, 在这个issue里面同时出现了上述两个问题，拼音插件的作者回复下载5.2.2可以解决上述问题&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;所以最终打算下载es5.2.2，并按照mmseg和pinyin5.2.2&lt;/p&gt;
+
+&lt;h1 id=&quot;测试522分词&quot;&gt;测试5.2.2分词&lt;/h1&gt;
+
+&lt;p&gt;在相同配置的情况下&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://52.82.10.41:9200/test_new/_analyze?analyzer=pinyin_raw&amp;amp;text=36kr
+
+{
+    &quot;tokens&quot;: [
+        {
+            &quot;token&quot;: &quot;36kr&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 4,
+            &quot;type&quot;: &quot;word&quot;,
+            &quot;position&quot;: 0
+        }
+    ]
+}
+
+
+
+http://52.82.10.41:9200/test_new/_analyze?analyzer=pinyin_raw&amp;amp;text=哈哈dc
+{
+    &quot;tokens&quot;: [
+        {
+            &quot;token&quot;: &quot;hahadc&quot;,
+            &quot;start_offset&quot;: 0,
+            &quot;end_offset&quot;: 6,
+            &quot;type&quot;: &quot;word&quot;,
+            &quot;position&quot;: 0
+        }
+    ]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;已经解决了上述问题并且满足了我们的需要&lt;/p&gt;
+
+&lt;h1 id=&quot;结论&quot;&gt;结论&lt;/h1&gt;
+
+&lt;p&gt;分词出现空白和中英文连接不生效的情况是elasticsearch和插件版本较低导致， 我们的最终解决方式是升级elasticsearch和插件到5.2.2， 因为升级es可以会对应用整体造成影响，升级之前需要先评估应用对es的依赖性。&lt;/p&gt;
+</description>
+        <pubDate>Tue, 03 Dec 2019 12:00:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/chinese_sort/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/chinese_sort/</guid>
+        
+        <category>elasticsearch</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
     
       <item>
         <title>golang基本类型</title>
         <description>&lt;p&gt;golang基本类型， number, string, unicode, utf-8的基础知识&lt;/p&gt;
 
-&lt;p&gt;[toc]&lt;/p&gt;
 &lt;h1 id=&quot;四种类型&quot;&gt;四种类型&lt;/h1&gt;
 &lt;ul&gt;
   &lt;li&gt;基本类型，numbers, strings, booleans&lt;/li&gt;
@@ -162,41 +307,51 @@
 &quot;\u4e16\u754c&quot;               16 bit unicode
 &quot;\U00004e16\U0000754c&quot;       32 bit unicode
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;下面都是rune字面量，256内的值可以用单个十六进制来表示，&lt;code class=&quot;highlighter-rouge&quot;&gt;\xe4\xb8\x96&lt;/code&gt;虽然是一个utf8编码的码点，但不是一个有效的rune字面量
-```
-‘世’, ‘\u4e16’, ‘\U00004e16’
-‘\x41’&lt;/li&gt;
+  &lt;li&gt;下面都是rune字面量，256内的值可以用单个十六进制来表示，&lt;code class=&quot;highlighter-rouge&quot;&gt;\xe4\xb8\x96&lt;/code&gt;虽然是一个utf8编码的码点，但不是一个有效的rune字面量&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;‘\xe4\xb8\x96’ // 不是rune字面量&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
-- 对于字符串直接使用索引遍历，遍历的是字节，而可用使用range来遍历rune, utf8.RuneCountInString可以返回某个字节rune的个数
-- 当utf8在解码时碰到错误的字节会使用`\uFFFD`来代替，是一个�这样的符号，当碰到了这样的符号，说明其他系统传过来的字节编码可能是不清楚的
-- rune和string相互转化
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'世', '\u4e16', '\U00004e16'
+'\x41'
+
+'\xe4\xb8\x96' // 不是rune字面量
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;s:=”哈哈”
+
+&lt;ul&gt;
+  &lt;li&gt;对于字符串直接使用索引遍历，遍历的是字节，而可用使用range来遍历rune, utf8.RuneCountInString可以返回某个字节rune的个数&lt;/li&gt;
+  &lt;li&gt;当utf8在解码时碰到错误的字节会使用&lt;code class=&quot;highlighter-rouge&quot;&gt;\uFFFD&lt;/code&gt;来代替，是一个�这样的符号，当碰到了这样的符号，说明其他系统传过来的字节编码可能是不清楚的&lt;/li&gt;
+  &lt;li&gt;rune和string相互转化&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;s:=&quot;哈哈&quot;
 r:=[]rune(s)   // string =&amp;gt; rune utf8 decode
 string(r)      // rune =&amp;gt; string utf8 encode
-string(65)     // “A”  integer =&amp;gt; string
-string(0x4eac) // “京”  0x4eac也是integer字面量
-string(1234567)// � 无效&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
-## 字符和字节切片
-
-- 四个重要的标准包
-    1. strings,对字符串基本的查找，替换，比较，去空，分割，结合操作
-    2. bytes，对[]byte有相同的操作
-    3. strconv，负责boolean, int, float等类型转换到string
-    4. unicode, 对rune的各种操作
-- 因为string是不可变的，所以当想通过不断累积的方式获取新的string需要不停的分配内存，使用bytes.Buffer效率更好
-- 下面的方式可以将string和[]byte互转，在转化的过程中，重新分配内存和拷贝是必要的，因为[]byte是可以改变的
+string(65)     // &quot;A&quot;  integer =&amp;gt; string
+string(0x4eac) // &quot;京&quot;  0x4eac也是integer字面量
+string(1234567)// � 无效
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;s := “abc”
-b := []byte(s)
-s2 := string(b)&lt;/p&gt;
 
-&lt;p&gt;```&lt;/p&gt;
+&lt;h2 id=&quot;字符和字节切片&quot;&gt;字符和字节切片&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;四个重要的标准包
+    &lt;ol&gt;
+      &lt;li&gt;strings,对字符串基本的查找，替换，比较，去空，分割，结合操作&lt;/li&gt;
+      &lt;li&gt;bytes，对[]byte有相同的操作&lt;/li&gt;
+      &lt;li&gt;strconv，负责boolean, int, float等类型转换到string&lt;/li&gt;
+      &lt;li&gt;unicode, 对rune的各种操作&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+  &lt;li&gt;因为string是不可变的，所以当想通过不断累积的方式获取新的string需要不停的分配内存，使用bytes.Buffer效率更好&lt;/li&gt;
+  &lt;li&gt;下面的方式可以将string和[]byte互转，在转化的过程中，重新分配内存和拷贝是必要的，因为[]byte是可以改变的&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;s := &quot;abc&quot;
+b := []byte(s)
+s2 := string(b)
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h2 id=&quot;数字和字符串转换&quot;&gt;数字和字符串转换&lt;/h2&gt;
 
@@ -554,175 +709,6 @@ db.createUser(
         <pubDate>Tue, 03 Sep 2019 17:53:00 +0800</pubDate>
         <link>http://localhost:4000/posts/k8s_basic_use/</link>
         <guid isPermaLink="true">http://localhost:4000/posts/k8s_basic_use/</guid>
-        
-        <category>kubernetes</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>kubernetes基础概念和命令</title>
-        <description>&lt;p&gt;kubernetes基础，包括kubectl命令和kubenetes的组件的概念，Pod, Node, Service等。&lt;/p&gt;
-
-&lt;h4 id=&quot;概念&quot;&gt;概念&lt;/h4&gt;
-
-&lt;p&gt;    Kubernetes最初源于谷歌内部的Borg，提供了面向应用的容器集群部署和管理系统。Kubernetes的目标旨在消除编排物理/虚拟计算，网络和存储基础设施的负担，并使应用程序运营商和开发人员完全将重点放在以容器为中心的原语上进行自助运营。Kubernetes 也提供稳定、兼容的基础（平台），用于构建定制化的workflows 和更高级的自动化任务。 Kubernetes 具备完善的集群管理能力，包括多层次的安全防护和准入机制、多租户应用支撑能力、透明的服务注册和服务发现机制、内建负载均衡器、故障发现和自我修复能力、服务滚动升级和在线扩容、可扩展的资源自动调度机制、多粒度的资源配额管理能力。 Kubernetes 还提供完善的管理工具，涵盖开发、部署测试、运维监控等各个环节。&lt;/p&gt;
-
-&lt;h4 id=&quot;kubenetes组成&quot;&gt;kubenetes组成&lt;/h4&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://pvuj0n458.bkt.clouddn.com/youdao/kubernetes-high-level-component-archtecture.jpg&quot; alt=&quot;kubernetes-high-level-component-architectur&quot; /&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Master 控制节点
-    &lt;ol&gt;
-      &lt;li&gt;Kubernetes API Server，提供Rest接口，所有资源增删改查的唯一入口&lt;/li&gt;
-      &lt;li&gt;Kubernetes Controller Manager，资源对象的自动化控制中心&lt;/li&gt;
-      &lt;li&gt;Kubernetes Scheduler，负责资源调度(Pod调度)&lt;/li&gt;
-      &lt;li&gt;etcd，资源数据的保存&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Node 工作节点
-    &lt;ol&gt;
-      &lt;li&gt;kubelet，负责容器创建、启停，与Master沟通&lt;/li&gt;
-      &lt;li&gt;kube-proxy, 实现Kubernetes Service的通信和负载均衡&lt;/li&gt;
-      &lt;li&gt;Docker Engine, 负责容器创建和管理&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Pod 基本单位
-    &lt;ol&gt;
-      &lt;li&gt;Pause容器，代表整个Pod的状态，共享IP，Volume&lt;/li&gt;
-      &lt;li&gt;用户的N个业务容器&lt;/li&gt;
-      &lt;li&gt;Endpoint = Pod IP + contrainerPort，代表服务进行的对外通信地址&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Label 标签
-    &lt;ol&gt;
-      &lt;li&gt;用户自定义的key-value键值对，可以附加到Node, Pod, Service, RC等资源对象上面&lt;/li&gt;
-      &lt;li&gt;LabelSelector可以通过=, in, not in等匹配条件来获取到特定的资源&lt;/li&gt;
-      &lt;li&gt;kube-controller进程通过资源对象RC定义的Label Selector来筛选要监控的Pod副本数量&lt;/li&gt;
-      &lt;li&gt;kube-proxy进行通过Service的Label Selector来选择对应的Pod，自定建议起每个Service到Pod的请求转发路由表&lt;/li&gt;
-      &lt;li&gt;Node定义特定Lable，Pod的NodeSelector，kube-scheduler实现定向调度&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Deployment 部署
-    &lt;ol&gt;
-      &lt;li&gt;RC的一次升级，和RC相似度超过90%&lt;/li&gt;
-      &lt;li&gt;相对于RC最大的升级是可以随时知道Pod部署的进度&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Horizontal Pod Autoscaler(HPA) 横向自动扩容
-    &lt;ol&gt;
-      &lt;li&gt;Pod横向自动扩容，通过追踪Pod的负载情况来确定是否针对调整目标Pod的副本数&lt;/li&gt;
-      &lt;li&gt;通过CPUUtilizationPercetage或者应用自定义度量指标来确定是否需要扩容或者缩容&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;StatefulSet 有状态集群
-    &lt;ol&gt;
-      &lt;li&gt;类似Deployment,但用于有状态的集群，例如MySQL集群，MongoDB集群，Akka集群等&lt;/li&gt;
-      &lt;li&gt;建立的Pod有稳定，唯一的网络标识&lt;/li&gt;
-      &lt;li&gt;启停顺序是受控的&lt;/li&gt;
-      &lt;li&gt;使用PV或者PVC来做数据的持久化，PV为PersistentVolum, PVC为PersistentVolumeClaim&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Service 服务
-    &lt;ol&gt;
-      &lt;li&gt;微服务，Pod和RC都是为了支持服务&lt;/li&gt;
-      &lt;li&gt;NodeIp(每个节点物理网卡的IP地址), PodIp(虚拟的二层网络), ClusterIp(虚拟的IP,无法被ping,只能和Service Port组成一个具体的通信端口)&lt;/li&gt;
-      &lt;li&gt;PodIp和ClusterIp是无法在k8s集群外访问的，要想访问，就得使用NodePort类型的Service,&lt;/li&gt;
-      &lt;li&gt;NodePort在k8s的集群的每个Node建立一个访问端口，我们只要访问任意一台Node就可以访问，但还需要一个负载均衡，可以将NodePort类型改为LoadBalancer，利用公有云提供的服务来实现负载均衡。&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Job 任务
-    &lt;ol&gt;
-      &lt;li&gt;批处理任务通常并行或者串行启动多个计算进程去处理一批工作项, 与RC, Deployment, RS类似，不过是一个特殊的Pod控制器&lt;/li&gt;
-      &lt;li&gt;Job控制的Pod是短暂运行的&lt;/li&gt;
-      &lt;li&gt;k8s的1.5版本后提供了CronJob&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Volume 存储卷
-    &lt;ol&gt;
-      &lt;li&gt;Volume是Pod中能被多个容器访问的共享目录，和Docker的Volume类似，但不能等价。&lt;/li&gt;
-      &lt;li&gt;和Pod生命周期相同，和容器生命周期无关&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Persistent Volume 网络存储
-    &lt;ol&gt;
-      &lt;li&gt;每个Node都可以访问，独立于Pod之外，类似网盘&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Namespace 命名空间
-    &lt;ol&gt;
-      &lt;li&gt;实现多租户的资源隔离&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Annoation 注解
-    &lt;ol&gt;
-      &lt;li&gt;和Label类似，Label具有严格的命名规则，Annoation是用户定义的任意附加信息， 以便于外部工具查找&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;ConfigMap
-    &lt;ol&gt;
-      &lt;li&gt;集中化的配置，解决了Docker容器只能使用环境变量或者共享文件的形式将一些配置传入容器内&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;kubectl-基本命令&quot;&gt;kubectl 基本命令&lt;/h4&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;kubectl [command] [TYPE] [NAME] [flags]&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;命令&lt;/th&gt;
-      &lt;th&gt;作用&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl create -f mysql-&amp;lt;xx&amp;gt;.yaml&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;根据yaml文件创建一个RC(ReplicationController), 或者Service, 取决于yaml文件中的kind属性&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get &amp;lt;resource&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看资源的大概情况,&lt;code class=&quot;highlighter-rouge&quot;&gt;-o yaml&lt;/code&gt;可以输出一个yaml格式。&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl describe &amp;lt;resource&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;描述资源的详细信息&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl delete &amp;lt;rc或svc&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;删除一个RC或者Service&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl scale rc my-web --replicas=3&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;动态调整RC副本数量&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl logs &amp;lt;podname&amp;gt;&lt;/code&gt;&lt;/td&gt;
-      &lt;td&gt;查看某个pod的日志&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;resource可以为pods, rc, nodes, svc, deployments, endpoints(切点), rs(新版本中的RC，支持集合Label selector)等，一般单复数形式都可以&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;-n&lt;/code&gt;命名空间，不写时为默认命名空间，系统命名空间为kube-system，使用可以查看一些系统的资源&lt;/li&gt;
-  &lt;li&gt;更多参数参考官方文档&lt;a href=&quot;https://kubernetes.io/docs/reference/kubectl/overview/&quot;&gt;kubectl&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;参考&quot;&gt;参考&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://jimmysong.io/kubernetes-handbook/concepts/&quot;&gt;《kubernetes-handbook》&lt;/a&gt;&lt;/p&gt;
-</description>
-        <pubDate>Tue, 03 Sep 2019 17:53:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/k8s_basic/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/k8s_basic/</guid>
         
         <category>kubernetes</category>
         
