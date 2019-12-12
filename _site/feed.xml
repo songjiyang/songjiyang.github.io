@@ -6,9 +6,275 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 03 Dec 2019 12:03:00 +0800</pubDate>
-    <lastBuildDate>Tue, 03 Dec 2019 12:03:00 +0800</lastBuildDate>
+    <pubDate>Thu, 12 Dec 2019 23:43:42 +0800</pubDate>
+    <lastBuildDate>Thu, 12 Dec 2019 23:43:42 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>golang复合类型</title>
+        <description>&lt;p&gt;golang的复合类型，包括数组，切片，哈希表和结构体等复合类型的使用&lt;/p&gt;
+
+&lt;h1 id=&quot;数组array&quot;&gt;数组(Array)&lt;/h1&gt;
+&lt;p&gt;数组，长度固定，包含的元素拥有一种共同类型&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;q := [...]{1,2,3}&lt;/code&gt;初始化的时候可以使用&lt;code class=&quot;highlighter-rouge&quot;&gt;...&lt;/code&gt;来省略长度，这时长度由后面元素的个数决定&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;数组的长度是它类型的一部分，[3]int和[4]int不是一个类型，数组长度必须是一个常量，也就是必须在编译的时候能确定的值&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;指定标引结合iota定义&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Currency&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;USD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Currency&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;itoa&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;EUR&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;GBP&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;RMB&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;symbol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;USD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;$&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EUR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;€&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GBP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;£&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RMB&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;￥&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;指定特定标引，并给其他值默认值，定义100个值，最后一个是-1，其余是0&lt;code class=&quot;highlighter-rouge&quot;&gt; r:=[...]int{99: -1}&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;如果数组的一个元素是可以比较的，那么这个数组类型就是可以比较，可以直接对数组使用==或者!=， 会将两个数组一个一个去比较，但[2]int和[3]int不是一个类型，不能比较&lt;/li&gt;
+  &lt;li&gt;go的数组当做参数传递的时候会copy一份原数组（对于其他类型go也是这样做的），这样效率比较低，在其他语言中都是隐式的传的引用，在go中可以显示的使用指针来达到同样的效果, 尽管这样，数组也不够灵活，因为他们的长度是固定了，所以很少在func参数使用数组作为参数而是使用切片(slice)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;切片slices&quot;&gt;切片(Slices)&lt;/h1&gt;
+
+&lt;p&gt;可变长度，所有元素拥有一种类型，轻量级的数据结构可以访问数组的子序列，包含三部分组成：指针，长度和容量，长度小于等于容量，可以使用len和cap函数获取切片的长度和容量&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;s[i:j]切片操作，s可以是一个数组，指向数组的指针或者其他切片，返回一个新的切片， 0≤i≤j≤cap(s), i和j可以单独或者同时省略，i的默认值是0，j的默认值是len(s)&lt;/li&gt;
+  &lt;li&gt;s[i:j]中j超过cap(s)会报错，超过len(s)会扩展数组。&lt;/li&gt;
+  &lt;li&gt;substring操作和在[]byte上面的切片是很相似的，都是s[x:y], 都返回原始字节序列的子序列，都依赖潜在数组所以花费常量时间，唯独不同的是，当s是string时返回string,当s时[]byte返回[]byte&lt;/li&gt;
+  &lt;li&gt;因为切片含一个指针，当做函数参数传递的时候允许函数去修改底层数组元素，也就是说，拷贝切片创建了底层数组的一个别名&lt;/li&gt;
+  &lt;li&gt;和数组不同，切片是不可比较的，对于字节切片，可以使用bytes.Equal来比较，其他类型的切片的比较需要我们自己来实现&lt;/li&gt;
+  &lt;li&gt;make([]T, len, cap)可以创建一个切片，指定长度和容量，容量可以省略和长度一致。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;append方法&quot;&gt;append方法&lt;/h2&gt;
+
+&lt;p&gt;append将一个元素追加到切片s里面，方法内部的机制简单如下，查看s的cap是否够大，如果够大，就使用同样的底层数组，把切片s的len加1，并把元素加入那个位置，如果不够大，就会重新分配内存建一个新的底层数组，然后将数组拷贝过去，并将新元素加入，然后返回新的切片&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;因为我们不能确定每次调用append方法的时候会不会重新分配内存，所以通常我们会使用append的返回值赋值给原来的切片，而不能去依赖append方法以参数引用改变切片。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;s := append(s, a)  
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;一些原位操作&quot;&gt;一些原位操作&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;这些操作并不会重新分配内存，而是利用原有的底层数组&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;func nonempty(strings []string) []string {
+	i := 0
+	for _, s := range strings {
+		if s != &quot;&quot; {
+			strings[i] = s
+			i++
+		}
+	}
+	return strings[:i]
+}
+func remove(s []int, i int) []int  {
+	copy(s[i:], s[i+1:])
+	return s[:len(s)-1]
+}
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;哈希表map&quot;&gt;哈希表(Map)&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;哈希表是一个无序的键值对，键是唯一的，无论表多大，根据键去检索，更新，删除值平均花费常量的时间。&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Go的map是一个哈希表的一个引用，map[K]V, 键拥有相同的类型，值也拥有相同的类型，键和值的类型可以不同，键必须是可以比较的，这样才能确保键的唯一性，最好不要用浮点作为key, 因为浮点比较不准而且NaN不能去比较&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;使用make或者map字面量来生成map, 使用delete来删除，使用下标来检索&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;m := make(map[string]int)
+m := map[string]int{
+    &quot;haha&quot;:1,
+    &quot;heihei&quot;:2
+}
+// delete
+delete(m, &quot;haha&quot;)
+
+// retrieve
+m[&quot;haha&quot;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;获取不了map元素的地址，其中一个原因是因为map重新哈希已有元素，使之前的地址失效&lt;/li&gt;
+  &lt;li&gt;使用range来遍历map的k,v, map本身是无序的，但我们可以将key放入一个数组排序，然后按照我们排序的key取出来&lt;/li&gt;
+  &lt;li&gt;查询，删除，遍历一个nil的map是安全的，但不是赋值一个nil map&lt;/li&gt;
+  &lt;li&gt;和切片一样，map不能直接比较&lt;/li&gt;
+  &lt;li&gt;因为map对于不存在的key是取0值的，在检索时使用第二个返回值来判断key是不是真正存在map中，如下&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if age, ok := ages[&quot;bob&quot;]; !ok {}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;go没有提供set这样的类型，map的key是唯一的，可以当做set来使用&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;结构体struct&quot;&gt;结构体(Struct)&lt;/h1&gt;
+
+&lt;p&gt;结构体就是有0个或者多个字段的复合类型&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;go在我们使用结构体指针的时候做了一些简化操作，不用显示写*也能使用结构体，如下&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;employeeOfTheMonth&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Employee&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dilbert&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;// dilbert is a Employee type struct, i omit the context&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;employeeOfTheMonth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Position&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// is equivalent to&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;employeeOfTheMonth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Position&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;当一个方法返回一个结构体指针的时候，是可以直接方法其属性的，但返回一个结构体的时候不能，如下&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;//  error cannot assign to NewAccount().Name&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// pass&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;结构体的字段顺序是有意义的，顺序不同则是不同的结构体&lt;/li&gt;
+  &lt;li&gt;结构体类型S不能包含结构体类型S, 但可以包含结构体类型指针*S, 这样我们可以去创建一些链表和树式的类型&lt;/li&gt;
+  &lt;li&gt;结构体的零值就是每个属性类型的零值&lt;/li&gt;
+  &lt;li&gt;空结构体不存数据，所以会有人使用set时，用这样的结构map[string]struct{}, 但是节省空间不重要，而且这种写法很繁琐，最好不要这样写&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;结构体字面量&quot;&gt;结构体字面量&lt;/h2&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;//形式一, 简单，但需要记住属性的位置，在增加属性之后也需要调整位置&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;//形式二，显示指明属性名，没指定属性的值为零值&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;结构体可以当作函数的参数传递，但遇到比较大的机构体时，为了提高效率，最好传递指针，而且当函数想要改变传入的参数时必须这么做，因为go只有值传递。&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pp := &amp;amp;Point{1,2}&lt;/code&gt;创建并初始化一个Point指针&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;比较结构体&quot;&gt;比较结构体&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;如果结构体的所有字段都是可比较的，那么结构体就是可比较的&lt;/li&gt;
+  &lt;li&gt;可比较的结构体可以作为map的key&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;结构体的内置匿名属性&quot;&gt;结构体的内置匿名属性&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;结构体可以通过组合的方式来减少代码的重复性, 但这样的话，需要多个&lt;code class=&quot;highlighter-rouge&quot;&gt;.&lt;/code&gt;符合来获取到嵌套结构体的属性&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Center&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Radius&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Spokes&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Center&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CirCle&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Center&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;使用匿名字段的方式可以使用一个&lt;code class=&quot;highlighter-rouge&quot;&gt;.&lt;/code&gt;来获取嵌套结构体的属性&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Radius&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Spokes&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;但在使用字面量初始化的时候还需要些多层结构体&lt;/li&gt;
+  &lt;li&gt;匿名属性不一定非得是结构体，可以是其他任意被命名的类型或者指向其的指针，匿名属性对于这些类型的意义不在于节省&lt;code class=&quot;highlighter-rouge&quot;&gt;.&lt;/code&gt;符，而且为了继承类型的方法&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;json&quot;&gt;JSON&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;json.Marshal(movies) 将go对象转为Json字节数组， json.MarshalIndent(movies, “”, “	“), 转为格式可读的Json字节数组，没被导出的字段不会被转化为json&lt;/li&gt;
+  &lt;li&gt;字段标签, 是编译时期和结构体属性相关的元数据字符串，里面的json key控制着encoding/json的转化表现&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Year int `json: &quot;released&quot;`
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;json.Unmarshal(data, &amp;amp;titles), 将字节序列转化为go对象，这个过程对字段的忽视大小写，所以不用给那些只有大小不同的字段增加字段标签&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;文本和html&quot;&gt;文本和HTML&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;text/template和html/template包&lt;/li&gt;
+  &lt;li&gt;一些表达式和使用管道符&lt;code class=&quot;highlighter-rouge&quot;&gt;|&lt;/code&gt;对表达式进行处理&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Thu, 12 Dec 2019 23:00:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/composite_type/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/composite_type/</guid>
+        
+        <category>golang</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
     
       <item>
         <title>5.1.1版本elasticsearch中英文排序</title>
@@ -611,106 +877,6 @@ db.createUser(
         <guid isPermaLink="true">http://localhost:4000/posts/mongodb_skill/</guid>
         
         <category>mongodb</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>kubernetes基础使用</title>
-        <description>&lt;p&gt;kubernetes基础使用，创建一个Deployment,创建一个Service&lt;/p&gt;
-
-&lt;h3 id=&quot;使用k8s部署一个nginx&quot;&gt;使用k8s部署一个nginx&lt;/h3&gt;
-
-&lt;h4 id=&quot;创建一个deployment&quot;&gt;创建一个Deployment&lt;/h4&gt;
-&lt;ul&gt;
-  &lt;li&gt;controllers/nginx-deployment.yaml&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;apps/v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Deployment&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx-deployment&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;replicas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;selector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;matchLabels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
-        &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
-        &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-        &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;containerPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h5 id=&quot;必需字段&quot;&gt;必需字段&lt;/h5&gt;
-&lt;p&gt;在想要创建的 Kubernetes 对象对应的 .yaml 文件中，需要配置如下的字段：&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;apiVersion - 创建该对象所使用的 Kubernetes API 的版本&lt;/li&gt;
-  &lt;li&gt;kind - 想要创建的对象的类型&lt;/li&gt;
-  &lt;li&gt;metadata - 帮助识别对象唯一性的数据，包括一个 name 字符串、UID 和可选的 namespace&lt;/li&gt;
-  &lt;li&gt;spec 字段。对象 spec 的精确格式对每个 Kubernetes 对象来说是不同的，包含了特定于该对象的嵌套字段。&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#&quot;&gt;Kubernetes API&lt;/a&gt;参考能够帮助我们找到任何我们想创建的对象的 spec 格式。&lt;/p&gt;
-
-&lt;h4 id=&quot;问题&quot;&gt;问题&lt;/h4&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Deployment的matchLabels必选能选到template的label,否则创建资源的时候会报错。==为什么==, 因为这个Deployment选择不到对应的pod，达不到要求的replica为3，所以会不停新建template的Pod。&lt;/li&gt;
-  &lt;li&gt;现在如何访问这个nginx
-    &lt;ul&gt;
-      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl port-forward &amp;lt;podname&amp;gt; 80:80&lt;/code&gt;，使用kubectl代理，这样只有拥有k8s集群权限才行，用不了k8s也访问不到&lt;/li&gt;
-      &lt;li&gt;建一个Service，下面介绍&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h4 id=&quot;创建一个service&quot;&gt;创建一个Service&lt;/h4&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;service/nginx-service.yml&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Service&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx-service&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;selector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;nginx&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;http&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;protocol&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;TCP&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;targetPort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;nodePort&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;31100&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;NodePort&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;spec.type分别有ClusterIP(default), NodePort, and LoadBalancer，
-    &lt;ol&gt;
-      &lt;li&gt;默认的ClusterIP会给这个Service生成一个虚拟IP,在k8s集群中，我们可以通过这个ip,或者Service的name(借助的k8s的dns解析)来访问这个服务，但我们还是无法在外部访问到这个服务&lt;/li&gt;
-      &lt;li&gt;NodePort会在k8s集群中的所有Node开启一个nodePort指定的端口或者随机端口，然后我们可以拿k8s集群中任意一个机器的IP加这个nodePort就可以访问这个服务，但这个任然不是最佳的方式，因为我们需要一个额外的文件来维护不同服务的不同端口，在后面可以借助ingress，和ingress controller边缘路由器来暴露端口，并对k8s内部的服务进行反向代理。&lt;/li&gt;
-      &lt;li&gt;LoadBalancer借助云服务商提供的LoadBalancer软件，将服务暴露在云服务商的LB软件上，每个厂商的配置不太相同&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Tue, 03 Sep 2019 17:53:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/k8s_basic_use/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/k8s_basic_use/</guid>
-        
-        <category>kubernetes</category>
         
         
         <category>posts</category>
