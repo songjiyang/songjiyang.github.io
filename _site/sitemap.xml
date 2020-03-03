@@ -3,6 +3,60 @@
 
   
   <url>
+    <loc>http://localhost:4000/posts/rabbitmq_publisher/</loc>
+    
+      <lastmod>2020-03-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/rabbitmq_properties/</loc>
+    
+      <lastmod>2020-03-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/rabbitmq_and_amqp/</loc>
+    
+      <lastmod>2020-03-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/method/</loc>
+    
+      <lastmod>2020-03-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/interface/</loc>
+    
+      <lastmod>2020-03-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
+    <loc>http://localhost:4000/posts/function/</loc>
+    
+      <lastmod>2020-03-03</lastmod>
+    
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
     <loc>http://localhost:4000/posts/composite_type/</loc>
     
       <lastmod>2019-12-12</lastmod>

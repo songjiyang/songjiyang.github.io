@@ -6,270 +6,117 @@
 </description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 12 Dec 2019 23:43:42 +0800</pubDate>
-    <lastBuildDate>Thu, 12 Dec 2019 23:43:42 +0800</lastBuildDate>
+    <pubDate>Tue, 03 Mar 2020 18:55:32 +0800</pubDate>
+    <lastBuildDate>Tue, 03 Mar 2020 18:55:32 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
     
       <item>
-        <title>golang复合类型</title>
-        <description>&lt;p&gt;golang的复合类型，包括数组，切片，哈希表和结构体等复合类型的使用&lt;/p&gt;
+        <title>RabbitMQ发布者性能权衡</title>
+        <description>&lt;p&gt;RabbitMQ消息发布的性能权衡&lt;/p&gt;
 
-&lt;h1 id=&quot;数组array&quot;&gt;数组(Array)&lt;/h1&gt;
-&lt;p&gt;数组，长度固定，包含的元素拥有一种共同类型&lt;/p&gt;
+&lt;p&gt;Rabbitmq提供了很多选项功能来保证消息的可靠性，但这需要我们在性能和可靠性之间进行权衡，AMQP规范提供消息中的事务，消息持久化，可靠消息等，RabbitMQ提供消息确认，HA队列等来保证消息的可靠性&lt;/p&gt;
 
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;q := [...]{1,2,3}&lt;/code&gt;初始化的时候可以使用&lt;code class=&quot;highlighter-rouge&quot;&gt;...&lt;/code&gt;来省略长度，这时长度由后面元素的个数决定&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;数组的长度是它类型的一部分，[3]int和[4]int不是一个类型，数组长度必须是一个常量，也就是必须在编译的时候能确定的值&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;指定标引结合iota定义&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
+&lt;h2 id=&quot;平衡速度和可靠性&quot;&gt;平衡速度和可靠性&lt;/h2&gt;
 
-&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Currency&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;USD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Currency&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;itoa&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;EUR&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;GBP&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;RMB&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;symbol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;USD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;$&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;EUR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;€&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GBP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;£&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;RMB&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;￥&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;遵循金发姑娘原则==刚刚好，每个为了可靠性的机制都对性能产生一定的影响，当单个使用时，可能吞吐量不会有显著的差异，当组合使用时，将会产生重大影响，只有通过性能基准测试，才能找到性能和可靠投递的平衡&lt;/p&gt;
+
+&lt;p&gt;下面是几个找到刚刚好解决方案的问题&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;指定特定标引，并给其他值默认值，定义100个值，最后一个是-1，其余是0&lt;code class=&quot;highlighter-rouge&quot;&gt; r:=[...]int{99: -1}&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;如果数组的一个元素是可以比较的，那么这个数组类型就是可以比较，可以直接对数组使用==或者!=， 会将两个数组一个一个去比较，但[2]int和[3]int不是一个类型，不能比较&lt;/li&gt;
-  &lt;li&gt;go的数组当做参数传递的时候会copy一份原数组（对于其他类型go也是这样做的），这样效率比较低，在其他语言中都是隐式的传的引用，在go中可以显示的使用指针来达到同样的效果, 尽管这样，数组也不够灵活，因为他们的长度是固定了，所以很少在func参数使用数组作为参数而是使用切片(slice)&lt;/li&gt;
+  &lt;li&gt;消息发布时保证消息进入队列的重要性有多高&lt;/li&gt;
+  &lt;li&gt;如果消息无法路由，是否应将消息返回给发布者&lt;/li&gt;
+  &lt;li&gt;如果消息无法路由，是否应该将其发生到其他地方稍后进行重新路由&lt;/li&gt;
+  &lt;li&gt;如果RabbitMQ服务器崩溃，可以接受信息丢失吗&lt;/li&gt;
+  &lt;li&gt;rabbitmq在处理新消息时，是否应该确认它已经为发布者执行了所有请求的路由和持久化任务？&lt;/li&gt;
+  &lt;li&gt;消息发布者是否可以批量投递消息，然后从rabbitmq收到一个确认用于表明所有请求的路由和持久化任务已经批量应用到所有的消息中？&lt;/li&gt;
+  &lt;li&gt;如果你要批量发布消息，而这些消息需要确认路由和持久化，那么对每一条消息是否需要对目标队列实现真正意义上的原子提交？&lt;/li&gt;
+  &lt;li&gt;在可靠投递方面是否有可接受的平衡性，你的发布者可以使用它来实现更高的性能和消息吞吐量吗？&lt;/li&gt;
+  &lt;li&gt;消息发布还有哪些方面会影响消息吞吐量和性能？&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h1 id=&quot;切片slices&quot;&gt;切片(Slices)&lt;/h1&gt;
-
-&lt;p&gt;可变长度，所有元素拥有一种类型，轻量级的数据结构可以访问数组的子序列，包含三部分组成：指针，长度和容量，长度小于等于容量，可以使用len和cap函数获取切片的长度和容量&lt;/p&gt;
+&lt;h3 id=&quot;如果没有保证机制&quot;&gt;如果没有保证机制&lt;/h3&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;s[i:j]切片操作，s可以是一个数组，指向数组的指针或者其他切片，返回一个新的切片， 0≤i≤j≤cap(s), i和j可以单独或者同时省略，i的默认值是0，j的默认值是len(s)&lt;/li&gt;
-  &lt;li&gt;s[i:j]中j超过cap(s)会报错，超过len(s)会扩展数组。&lt;/li&gt;
-  &lt;li&gt;substring操作和在[]byte上面的切片是很相似的，都是s[x:y], 都返回原始字节序列的子序列，都依赖潜在数组所以花费常量时间，唯独不同的是，当s是string时返回string,当s时[]byte返回[]byte&lt;/li&gt;
-  &lt;li&gt;因为切片含一个指针，当做函数参数传递的时候允许函数去修改底层数组元素，也就是说，拷贝切片创建了底层数组的一个别名&lt;/li&gt;
-  &lt;li&gt;和数组不同，切片是不可比较的，对于字节切片，可以使用bytes.Equal来比较，其他类型的切片的比较需要我们自己来实现&lt;/li&gt;
-  &lt;li&gt;make([]T, len, cap)可以创建一个切片，指定长度和容量，容量可以省略和长度一致。&lt;/li&gt;
+  &lt;li&gt;我们只能用消息队列发布一些不是很重要的消息，即使消息丢失或者RabbitMQ重启也影响不大&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;append方法&quot;&gt;append方法&lt;/h2&gt;
+&lt;h3 id=&quot;mandatory&quot;&gt;mandatory&lt;/h3&gt;
 
-&lt;p&gt;append将一个元素追加到切片s里面，方法内部的机制简单如下，查看s的cap是否够大，如果够大，就使用同样的底层数组，把切片s的len加1，并把元素加入那个位置，如果不够大，就会重新分配内存建一个新的底层数组，然后将数组拷贝过去，并将新元素加入，然后返回新的切片&lt;/p&gt;
+&lt;p&gt;此标志告诉RabbitMQ是强制的(mandatory), 如果消息不可路由，它应该通过Basic.Return命令将消息返回给发布者，如果消息路由成功，发布者不会收到通知。&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;因为我们不能确定每次调用append方法的时候会不会重新分配内存，所以通常我们会使用append的返回值赋值给原来的切片，而不能去依赖append方法以参数引用改变切片。&lt;/li&gt;
+  &lt;li&gt;python的rabbitpy库自动接收Basic.Return,并在信道范围内收到该调用时触发MessageReturnedException异常&lt;/li&gt;
+  &lt;li&gt;其他库需要注册一个回调方法来监听并响应这个RPC调用，这个过程就好像在消费消息一样接收到刚才发布的无法路由的消息&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;s := append(s, a)  
+&lt;h3 id=&quot;发布者确认&quot;&gt;发布者确认&lt;/h3&gt;
 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;此功能是RabbitMQ的功能，只支持特定库, 开启之后，RabbitMQ接收到发布者的消息之后会返回给发布者Basic.Ack或者Basic.Nack来告知发布者消息被成消费者消费，持久化或者无法路由。&lt;/p&gt;
 
-&lt;h2 id=&quot;一些原位操作&quot;&gt;一些原位操作&lt;/h2&gt;
-&lt;ul&gt;
-  &lt;li&gt;这些操作并不会重新分配内存，而是利用原有的底层数组&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;func nonempty(strings []string) []string {
-	i := 0
-	for _, s := range strings {
-		if s != &quot;&quot; {
-			strings[i] = s
-			i++
-		}
-	}
-	return strings[:i]
-}
-func remove(s []int, i int) []int  {
-	copy(s[i:], s[i+1:])
-	return s[:len(s)-1]
-}
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h1 id=&quot;哈希表map&quot;&gt;哈希表(Map)&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/04fig04_alt.jpg&quot; alt=&quot;时序图&quot; /&gt;&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;哈希表是一个无序的键值对，键是唯一的，无论表多大，根据键去检索，更新，删除值平均花费常量的时间。&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Go的map是一个哈希表的一个引用，map[K]V, 键拥有相同的类型，值也拥有相同的类型，键和值的类型可以不同，键必须是可以比较的，这样才能确保键的唯一性，最好不要用浮点作为key, 因为浮点比较不准而且NaN不能去比较&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;使用make或者map字面量来生成map, 使用delete来删除，使用下标来检索&lt;/p&gt;
-  &lt;/li&gt;
+  &lt;li&gt;可以使用回调来处理Basic.Ack或者Basic.Nack, 或者同步等待&lt;/li&gt;
+  &lt;li&gt;发布者确认不会和事务一起工作，是一个AMQP TX的轻量级并提供高性能的代替方案&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;m := make(map[string]int)
-m := map[string]int{
-    &quot;haha&quot;:1,
-    &quot;heihei&quot;:2
-}
-// delete
-delete(m, &quot;haha&quot;)
+&lt;h3 id=&quot;备用交换机&quot;&gt;备用交换机&lt;/h3&gt;
 
-// retrieve
-m[&quot;haha&quot;]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;当指定的交换机无法路由消息时，将消息路由给备用交换机&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;获取不了map元素的地址，其中一个原因是因为map重新哈希已有元素，使之前的地址失效&lt;/li&gt;
-  &lt;li&gt;使用range来遍历map的k,v, map本身是无序的，但我们可以将key放入一个数组排序，然后按照我们排序的key取出来&lt;/li&gt;
-  &lt;li&gt;查询，删除，遍历一个nil的map是安全的，但不是赋值一个nil map&lt;/li&gt;
-  &lt;li&gt;和切片一样，map不能直接比较&lt;/li&gt;
-  &lt;li&gt;因为map对于不存在的key是取0值的，在检索时使用第二个返回值来判断key是不是真正存在map中，如下&lt;/li&gt;
+  &lt;li&gt;当mandatory为true时，将备用交换机发送消息满足了消息以及被发布这一条件，所以不会再向发布者发送Basic.Return&lt;/li&gt;
+  &lt;li&gt;声明exchange的时候使用alternate-exchange属性来声明备用交换机&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if age, ok := ages[&quot;bob&quot;]; !ok {}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h3 id=&quot;事务和批量操作&quot;&gt;事务和批量操作&lt;/h3&gt;
+
+&lt;p&gt;在投递确认出现之前，确保消息被成功投递的唯一方法是事务，AMQP事务可以将消息批量发送的RabbitMQ, 然后提交或回滚
+&lt;img src=&quot;http://pic.sjoe.top/blog/04fig06_alt.jpg&quot; alt=&quot;时序图&quot; /&gt;&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;go没有提供set这样的类型，map的key是唯一的，可以当做set来使用&lt;/li&gt;
+  &lt;li&gt;RabbitMQ事务中的每个命令作用同一个队列时才能保持真正的原子性&lt;/li&gt;
+  &lt;li&gt;将delivery-mode设置为2在事务中需要等待更长的时间&lt;/li&gt;
+  &lt;li&gt;可以使用投递确认用作事务的轻量级代替方案&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h1 id=&quot;结构体struct&quot;&gt;结构体(Struct)&lt;/h1&gt;
+&lt;h3 id=&quot;ha队列&quot;&gt;HA队列&lt;/h3&gt;
 
-&lt;p&gt;结构体就是有0个或者多个字段的复合类型&lt;/p&gt;
+&lt;p&gt;HA队列时RabbitMQ对AMQP的增加功能，HA队列需要RabbitMQ集群，发布消息到高可用队列时，消息会被发送到集群中的所有服务器或者部分服务器&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;go在我们使用结构体指针的时候做了一些简化操作，不用显示写*也能使用结构体，如下&lt;/li&gt;
+  &lt;li&gt;使用x-ha-policy，和x-ha-nodes属性声明高可用队列&lt;/li&gt;
+  &lt;li&gt;RabbitMQ集群分为主节点和辅助节点，主节点宕机会重新选择辅助节点当主节点&lt;/li&gt;
+  &lt;li&gt;当在HA队列使用事务或者投递确认，要确保所有服务器都成功才会响应，所以延迟会更大&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;employeeOfTheMonth&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Employee&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dilbert&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;// dilbert is a Employee type struct, i omit the context&lt;/span&gt;
+&lt;h3 id=&quot;delivery-mode&quot;&gt;delivery-mode&lt;/h3&gt;
 
-&lt;span class=&quot;n&quot;&gt;employeeOfTheMonth&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Position&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;// is equivalent to&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;employeeOfTheMonth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Position&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;ul&gt;
-  &lt;li&gt;当一个方法返回一个结构体指针的时候，是可以直接方法其属性的，但返回一个结构体的时候不能，如下&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
-&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;//  error cannot assign to NewAccount().Name&lt;/span&gt;
-
-
-&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Account&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;NewAccount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;xxx&quot;&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;// pass&lt;/span&gt;
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;ul&gt;
-  &lt;li&gt;结构体的字段顺序是有意义的，顺序不同则是不同的结构体&lt;/li&gt;
-  &lt;li&gt;结构体类型S不能包含结构体类型S, 但可以包含结构体类型指针*S, 这样我们可以去创建一些链表和树式的类型&lt;/li&gt;
-  &lt;li&gt;结构体的零值就是每个属性类型的零值&lt;/li&gt;
-  &lt;li&gt;空结构体不存数据，所以会有人使用set时，用这样的结构map[string]struct{}, 但是节省空间不重要，而且这种写法很繁琐，最好不要这样写&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;结构体字面量&quot;&gt;结构体字面量&lt;/h2&gt;
-
-&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;//形式一, 简单，但需要记住属性的位置，在增加属性之后也需要调整位置&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;//形式二，显示指明属性名，没指定属性的值为零值&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;ul&gt;
-  &lt;li&gt;结构体可以当作函数的参数传递，但遇到比较大的机构体时，为了提高效率，最好传递指针，而且当函数想要改变传入的参数时必须这么做，因为go只有值传递。&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pp := &amp;amp;Point{1,2}&lt;/code&gt;创建并初始化一个Point指针&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;比较结构体&quot;&gt;比较结构体&lt;/h2&gt;
+&lt;p&gt;当设置为2时，告诉RabbitMQ将消息写入磁盘，这被称为消息持久化，可以确保RabbitMQ服务因任何原因重启之后，消息还在队列中&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;如果结构体的所有字段都是可比较的，那么结构体就是可比较的&lt;/li&gt;
-  &lt;li&gt;可比较的结构体可以作为map的key&lt;/li&gt;
+  &lt;li&gt;需要服务器提供良好的写入能力，当服务器IO能力不足时，会让消息写入磁盘等待，导致消息吞吐量降低&lt;/li&gt;
+  &lt;li&gt;是保证消息最终被投递的重要方式之一，但实现它的代价也是最大的&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;结构体的内置匿名属性&quot;&gt;结构体的内置匿名属性&lt;/h2&gt;
+&lt;h3 id=&quot;rabbitmq回推&quot;&gt;RabbitMQ回推&lt;/h3&gt;
+
+&lt;p&gt;RabbitMQ使用Channel.Flow询问发布者让发布者停止发送，但这不是一种有效的方式，使用TCP背压停止接收TCP套字节上的底层数据&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;结构体可以通过组合的方式来减少代码的重复性, 但这样的话，需要多个&lt;code class=&quot;highlighter-rouge&quot;&gt;.&lt;/code&gt;符合来获取到嵌套结构体的属性&lt;/li&gt;
+  &lt;li&gt;RabbitMQ内部使用信用来管理回推发布者的时机&lt;/li&gt;
+  &lt;li&gt;RabbitMQ3.2扩展了AMQP规范，增加了Connection.Blocked和Connection.Unblocked让客户端来询问服务器是否阻塞&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Center&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Radius&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Spokes&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;h2 id=&quot;小结&quot;&gt;小结&lt;/h2&gt;
 
-&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Center&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CirCle&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Center&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;ul&gt;
-  &lt;li&gt;使用匿名字段的方式可以使用一个&lt;code class=&quot;highlighter-rouge&quot;&gt;.&lt;/code&gt;来获取嵌套结构体的属性&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Radius&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;Spokes&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Circle&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wheel&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;但在使用字面量初始化的时候还需要些多层结构体&lt;/li&gt;
-  &lt;li&gt;匿名属性不一定非得是结构体，可以是其他任意被命名的类型或者指向其的指针，匿名属性对于这些类型的意义不在于节省&lt;code class=&quot;highlighter-rouge&quot;&gt;.&lt;/code&gt;符，而且为了继承类型的方法&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;json&quot;&gt;JSON&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;json.Marshal(movies) 将go对象转为Json字节数组， json.MarshalIndent(movies, “”, “	“), 转为格式可读的Json字节数组，没被导出的字段不会被转化为json&lt;/li&gt;
-  &lt;li&gt;字段标签, 是编译时期和结构体属性相关的元数据字符串，里面的json key控制着encoding/json的转化表现&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Year int `json: &quot;released&quot;`
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;ul&gt;
-  &lt;li&gt;json.Unmarshal(data, &amp;amp;titles), 将字节序列转化为go对象，这个过程对字段的忽视大小写，所以不用给那些只有大小不同的字段增加字段标签&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;文本和html&quot;&gt;文本和HTML&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;text/template和html/template包&lt;/li&gt;
-  &lt;li&gt;一些表达式和使用管道符&lt;code class=&quot;highlighter-rouge&quot;&gt;|&lt;/code&gt;对表达式进行处理&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;RabbitMQ提供了很多方式来保证消息最终投递，但我们需要根据实际需求来从性能和保证之间做权衡&lt;/p&gt;
 </description>
-        <pubDate>Thu, 12 Dec 2019 23:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/composite_type/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/composite_type/</guid>
+        <pubDate>Tue, 03 Mar 2020 19:26:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/rabbitmq_publisher/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/rabbitmq_publisher/</guid>
         
-        <category>golang</category>
+        <category>rabbitmq</category>
         
         
         <category>posts</category>
@@ -277,374 +124,466 @@ m[&quot;haha&quot;]
       </item>
     
       <item>
-        <title>5.1.1版本elasticsearch中英文排序</title>
-        <description>&lt;p&gt;5.1.1版本elasticsearch中英文排序问题排查及解决&lt;/p&gt;
+        <title>RabbitMQ消息属性</title>
+        <description>&lt;p&gt;RabbitMQ消息属性介绍&lt;/p&gt;
 
-&lt;h1 id=&quot;环境&quot;&gt;环境&lt;/h1&gt;
+&lt;h2 id=&quot;使用属性&quot;&gt;使用属性&lt;/h2&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;elasticsearch：5.1.1&lt;/li&gt;
-  &lt;li&gt;分词插件mmseg: 5.1.1&lt;/li&gt;
-  &lt;li&gt;拼音插件pinyin: 5.1.1&lt;/li&gt;
+  &lt;li&gt;消息头帧中的消息属性时一系列被Basic.Properties数据结构预定义好的值，有些属性例如delivery-mode, 已经有具体的含义，有的属性例如type没有具体属性&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h1 id=&quot;配置&quot;&gt;配置&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/03fig02_alt.jpg&quot; alt=&quot;消息属性&quot; /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;analyzer&quot;: {
-          &quot;pinyin_raw&quot;: {
-            &quot;type&quot;: &quot;pinyin&quot;,
-            &quot;keep_first_letter&quot;: false,
-            &quot;keep_full_pinyin&quot;: false,
-            &quot;keep_joined_full_pinyin&quot;: true,
-            &quot;keep_none_chinese_in_joined_full_pinyin&quot;: true,
-            &quot;keep_none_chinese_in_first_letter&quot;: true,
-            &quot;none_chinese_pinyin_tokenize&quot;: false,
-            &quot;lowercase&quot;: true
-          }
-          ...
+&lt;h3 id=&quot;content-type&quot;&gt;content-type&lt;/h3&gt;
 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;创建显示消息格式契约，就好像http中的content-type，告诉消费者你是以这种方式来序列化消息的，消费者能选择性的根据这个字段进行反序列化（取决于消费者端所用的Driver是否包含此功能)&lt;/p&gt;
 
-&lt;h1 id=&quot;需求&quot;&gt;需求&lt;/h1&gt;
-&lt;p&gt;想对文件名进行按照字典顺序排序，文件名有中文和英文，中文使用pinyin插件转化为拼音&lt;/p&gt;
+&lt;h3 id=&quot;content-encoding&quot;&gt;content-encoding&lt;/h3&gt;
 
-&lt;h1 id=&quot;问题&quot;&gt;问题&lt;/h1&gt;
-&lt;ol&gt;
-  &lt;li&gt;纯英文或纯数字混合分词结果多一个空格&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; http://ec2-52-81-100-48.cn-north-1.compute.amazonaws.com.cn:9200/test_new/_analyze?text=36kr&amp;amp;analyzer=pinyin_raw
- 
- 
- {
-    &quot;tokens&quot;: [
-        {
-            &quot;token&quot;: &quot;36kr&quot;,
-            &quot;start_offset&quot;: 0,
-            &quot;end_offset&quot;: 3,
-            &quot;type&quot;: &quot;word&quot;,
-            &quot;position&quot;: 0
-        },
-        {
-            &quot;token&quot;: &quot;&quot;,
-            &quot;start_offset&quot;: 0,
-            &quot;end_offset&quot;: 0,
-            &quot;type&quot;: &quot;word&quot;,
-            &quot;position&quot;: 1
-        }
-    ]
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;英文和中文混合时，不能正确拼接在一起, 且英文总是排在最前面&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://ec2-52-81-100-48.cn-north-1.compute.amazonaws.com.cn:9200/test_new/_analyze?text=哈哈dc&amp;amp;analyzer=pinyin_raw
-
-{
-    &quot;tokens&quot;: [
-        {
-            &quot;token&quot;: &quot;dc&quot;,
-            &quot;start_offset&quot;: 1,
-            &quot;end_offset&quot;: 3,
-            &quot;type&quot;: &quot;word&quot;,
-            &quot;position&quot;: 0
-        },
-        {
-            &quot;token&quot;: &quot;haha&quot;,
-            &quot;start_offset&quot;: 0,
-            &quot;end_offset&quot;: 4,
-            &quot;type&quot;: &quot;word&quot;,
-            &quot;position&quot;: 1
-        }
-    ]
-}
-
-本来应该是hahadc
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h1 id=&quot;解决过程&quot;&gt;解决过程&lt;/h1&gt;
-&lt;ol&gt;
-  &lt;li&gt;问题1之前pinyin插件的issue里面有人提到过，增加一个空白过滤器就可以去掉这个空白字符 &lt;a href=&quot;https://github.com/medcl/elasticsearch-analysis-pinyin/issues/163&quot;&gt;issue&lt;/a&gt;, 我自己也尝试过有效，但这个过滤器可以不加，升级es可以解决，所以下面测试的配置还是上面的配置。&lt;/li&gt;
-  &lt;li&gt;问题2查看pinyin插件的配置文档看到keep_none_chinese_in_joined_full_pinyin这个配置会将非中文和英文连接起来，但结果却没有，经过排查，发现pinyin插件5.1.1是不支持这个参数，由5.2.0的relase的commit可以看出是在这个版本才支持keep_none_chinese_in_joined_full_pinyin &lt;a href=&quot;https://github.com/medcl/elasticsearch-analysis-pinyin/compare/v5.2.0...master&quot;&gt;pinyin插件5.2.0commit记录&lt;/a&gt;, 并且解决了&lt;a href=&quot;https://github.com/medcl/elasticsearch-analysis-pinyin/issues/80&quot;&gt;#80issue&lt;/a&gt;, 在这个issue里面同时出现了上述两个问题，拼音插件的作者回复下载5.2.2可以解决上述问题&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;所以最终打算下载es5.2.2，并按照mmseg和pinyin5.2.2&lt;/p&gt;
-
-&lt;h1 id=&quot;测试522分词&quot;&gt;测试5.2.2分词&lt;/h1&gt;
-
-&lt;p&gt;在相同配置的情况下&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;http://52.82.10.41:9200/test_new/_analyze?analyzer=pinyin_raw&amp;amp;text=36kr
-
-{
-    &quot;tokens&quot;: [
-        {
-            &quot;token&quot;: &quot;36kr&quot;,
-            &quot;start_offset&quot;: 0,
-            &quot;end_offset&quot;: 4,
-            &quot;type&quot;: &quot;word&quot;,
-            &quot;position&quot;: 0
-        }
-    ]
-}
-
-
-
-http://52.82.10.41:9200/test_new/_analyze?analyzer=pinyin_raw&amp;amp;text=哈哈dc
-{
-    &quot;tokens&quot;: [
-        {
-            &quot;token&quot;: &quot;hahadc&quot;,
-            &quot;start_offset&quot;: 0,
-            &quot;end_offset&quot;: 6,
-            &quot;type&quot;: &quot;word&quot;,
-            &quot;position&quot;: 0
-        }
-    ]
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;已经解决了上述问题并且满足了我们的需要&lt;/p&gt;
-
-&lt;h1 id=&quot;结论&quot;&gt;结论&lt;/h1&gt;
-
-&lt;p&gt;分词出现空白和中英文连接不生效的情况是elasticsearch和插件版本较低导致， 我们的最终解决方式是升级elasticsearch和插件到5.2.2， 因为升级es可以会对应用整体造成影响，升级之前需要先评估应用对es的依赖性。&lt;/p&gt;
-</description>
-        <pubDate>Tue, 03 Dec 2019 12:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/chinese_sort/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/chinese_sort/</guid>
-        
-        <category>elasticsearch</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>golang基本类型</title>
-        <description>&lt;p&gt;golang基本类型， number, string, unicode, utf-8的基础知识&lt;/p&gt;
-
-&lt;h1 id=&quot;四种类型&quot;&gt;四种类型&lt;/h1&gt;
-&lt;ul&gt;
-  &lt;li&gt;基本类型，numbers, strings, booleans&lt;/li&gt;
-  &lt;li&gt;聚合类型，arrays, structs&lt;/li&gt;
-  &lt;li&gt;引用类型，pointers, slices, maps, functions, channels&lt;/li&gt;
-  &lt;li&gt;接口类型，interface&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h1 id=&quot;integer&quot;&gt;Integer&lt;/h1&gt;
-&lt;p&gt;int8, int16, int32, int64&lt;/p&gt;
-
-&lt;p&gt;uint8, uint16, uint32, uint64&lt;/p&gt;
-
-&lt;p&gt;不同尺寸和有无符号的int&lt;/p&gt;
+&lt;p&gt;处理XML或者数量较大的JSON或YAML文件时，会出现的问题，可以在发布消息进行压缩，接收消息解压缩&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;int和uint, 具体大小取决于编译器&lt;/li&gt;
-  &lt;li&gt;rune, int32的同义词，很方便表示一个Unicode码点&lt;/li&gt;
-  &lt;li&gt;byte, int8的同义词，重点强调是一系列的原生数据而不是一个值&lt;/li&gt;
-  &lt;li&gt;uintptr, 大小不确定，但足以装下指针的值，通常用于底层编码，例如Go使用C库&lt;/li&gt;
-  &lt;li&gt;int和它们的兄弟不是一种类型，需要显示转换，尽管int的底层是32位和int32一致。&lt;/li&gt;
-  &lt;li&gt;数学运算符，逻辑操作符，比较操作符, 位操作符，这些和其他语言的基本相同，下面是特殊的几个
-    &lt;ol&gt;
-      &lt;li&gt;%, 取余操作符， 结果的符合和被除数一致， -5%3和-5%-3的结果都是-2&lt;/li&gt;
-      &lt;li&gt;&amp;amp;^, 位清除操作， z = x &amp;amp;^ y   当y位1时，z位位0，否则和x的一样, 顾名思义，根据y中为1的位去清除x中的位&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;左移时空位填0，右移时空位填符号位，5右移1位是2，所以负数右移时要谨慎，-5右移1位是-3，计算机底层使用补码来存，负数的补码是对应正数的二进制按位取反再加1，正数的补码是正数的二进制&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;小知识点： &amp;amp;位操作可以用来检测某个位是不是1, 5 &amp;amp; 1 大于 0 能看出5的最右一位是1，可以通过右移5或者左移1来探测5的二进制里面有多少个1&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;整型字面量可以是任何长度和类型的，（字面量的意思就是&lt;code class=&quot;highlighter-rouge&quot;&gt;a=5&lt;/code&gt;,里面的5就是字面量）0开头的是八进制，0x开头的是十六进制，八进制多用于文件权限,十六进制多强调数字的位而不是值&lt;/li&gt;
-  &lt;li&gt;使用fmt.Printf的%d,%o,%x来输出十进制，八进制和十六进制&lt;/li&gt;
-  &lt;li&gt;rune字面量是被单引号包起来的单个字符，可以写入ascii码&lt;code class=&quot;highlighter-rouge&quot;&gt;a&lt;/code&gt;，也可以写入任意unicode码点例如&lt;code class=&quot;highlighter-rouge&quot;&gt;国&lt;/code&gt;, 类型是int32, 可以使用fmt.Printf的%d,%c,%q来输出十进制，字符，和引号引起来的字符&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h1 id=&quot;浮点数floating-point-numbers&quot;&gt;浮点数Floating-Point Numbers&lt;/h1&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;float32和float64, float32提供大约6位小数精度，float64提供大约15位小数精度&lt;/li&gt;
-  &lt;li&gt;特别大的数或者特别小的数应该用科学计数法&lt;/li&gt;
-  &lt;li&gt;特殊数值0,-0,+Inf,-Inf,NaN, 任何和NaN的比较都是false&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h1 id=&quot;复数&quot;&gt;复数&lt;/h1&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;complex64和complex128,&lt;/li&gt;
-  &lt;li&gt;complex函数构建复数，real和imag函数去复数的实数和虚数&lt;/li&gt;
-  &lt;li&gt;一个浮点字面量跟一个i就变成一个虚数字面量，例如3i,是实数为0的复数&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h1 id=&quot;布尔值&quot;&gt;布尔值&lt;/h1&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;true和false&lt;/li&gt;
-  &lt;li&gt;
-    &lt;table&gt;
-      &lt;tbody&gt;
-        &lt;tr&gt;
-          &lt;td&gt;!，&amp;amp;&amp;amp;，&lt;/td&gt;
-          &lt;td&gt; &lt;/td&gt;
-          &lt;td&gt;， &amp;amp;&amp;amp;的优先级高于&lt;/td&gt;
-          &lt;td&gt; &lt;/td&gt;
-          &lt;td&gt;, !是单元操作符&lt;/td&gt;
-        &lt;/tr&gt;
-      &lt;/tbody&gt;
-    &lt;/table&gt;
-  &lt;/li&gt;
-  &lt;li&gt;逻辑布尔表达式具有短路的表现，当前面的表达式足以确定真假的时候，就不在执行后面的表达式&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h1 id=&quot;字符串&quot;&gt;字符串&lt;/h1&gt;
-
-&lt;p&gt;字符串是不可变的一序列字节，可以包含任意数据，甚至0个字节，通常包含人类可读的文本，这些文本被解析为Utf8编码的码点（rune)&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;len方法返回字符串字节的个数，而不是rune，可以通过索引访问指定位置的字节&lt;/li&gt;
-  &lt;li&gt;substring操作，s[i:j]返回新字符串包含i到j(不含j)的字节，长度为j-i, i和j都可以省略，从0或者到结尾，和python的切片类似。&lt;/li&gt;
-  &lt;li&gt;+操作将两个字符串进行拼接返回一个新字符串&lt;/li&gt;
-  &lt;li&gt;可以使用==或者&amp;lt;进行比较，将一个字节一个字节进行比较&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;字符串的不可变性，保证了字符串的拷贝共享一份内存是安全的，所以拷贝任意长度的字符串和获取子串都是廉价的操作，它们共享着相同的内存，不会重新分配内存&lt;/strong&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;字符串字面量&quot;&gt;字符串字面量&lt;/h2&gt;
-&lt;ul&gt;
-  &lt;li&gt;go源文件被uft8编码，所以可以在文件中直接写unicode字符&lt;/li&gt;
-  &lt;li&gt;使用\来进行转义&lt;/li&gt;
-  &lt;li&gt;``包裹的是原生字符串字面量，其中的内容不会被转义，适合写正则，html，json等字符串&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;unicode&quot;&gt;Unicode&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Unicode是一个收集世界上数中语言和符合的编码表，正如ASCII一样，将字符和数字进行对应起来，计算机存储数字，在需要展示给人的时候转换为字符&lt;/li&gt;
-  &lt;li&gt;Unicode的每个符号对应的数字的值称为Unicode码点(Unicode code point), 在Go里面就是rune&lt;/li&gt;
-  &lt;li&gt;Unicode中如果用rune（int32)来存储的话，是非常简单和正规的，这样所有字符的长度都占4个字节，然而，我们平常大多使用的字符还是2个字节就能表示的了，或者1个字节能表示的了（比如ASCII)，所有字符占4个字节会浪费很多空间，所以就出现了UTF-8编码&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;utf-8&quot;&gt;UTF-8&lt;/h2&gt;
-
-&lt;p&gt;UTF-8是一个将Unicode码点转换为不同长度的编码，它使用1到4个字节来存储一个字符，那么这我曾经想过的一个问题是，既然一个字符的长度不同，那么在一个字节序列里面，它是如何判断边界的呢，它怎么判断这两个字节是这个字符，而这一个字节是这个字符？utf-8是这么做的，它用字节里面的高位（high-order bit)来标识下面跟着多少个字节，比如0xxxxx这样的代表着是ASCII码，下一个字节将是一个新的字符。110xxxx代表后面还跟随着两个字节，后面跟随的两个字节都是以10开头的。这样就能使用utf-8编码来节省空间。&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;utf8有很多特性，使我们不用对它转为unicode也能进行获取子串，比较，从左到右读取，不必担心上下文。&lt;/li&gt;
+  &lt;li&gt;存的是MIME(多用途互联用邮件扩展类型)，而不是UTF-8&lt;/li&gt;
+  &lt;li&gt;注意区分content-type, content-encoding, charset的区别&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;table&gt;
   &lt;thead&gt;
     &lt;tr&gt;
-      &lt;th&gt;Unicode&lt;/th&gt;
-      &lt;th&gt;Utf-8&lt;/th&gt;
+      &lt;th&gt;属性&lt;/th&gt;
+      &lt;th&gt;含义&lt;/th&gt;
     &lt;/tr&gt;
   &lt;/thead&gt;
   &lt;tbody&gt;
     &lt;tr&gt;
-      &lt;td&gt;000000-00007F&lt;/td&gt;
-      &lt;td&gt;0xxxxxxx&lt;/td&gt;
+      &lt;td&gt;content-type&lt;/td&gt;
+      &lt;td&gt;内容的类型，一般是text/plain, application/json, text/xml这些，发送方和接收方会根据此字段解析内容&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;000080-0007FF&lt;/td&gt;
-      &lt;td&gt;110xxxxx 10xxxxxx&lt;/td&gt;
+      &lt;td&gt;content-encoding&lt;/td&gt;
+      &lt;td&gt;压缩格式，一般是br, gzip, x-gzip指定数据被压缩&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;000800-00FFFF&lt;/td&gt;
-      &lt;td&gt;1110xxxx 10xxxxxx 10xxxxxx&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;010000-10FFFF&lt;/td&gt;
-      &lt;td&gt;11110xxx 10xxxxxx 10xxxxxx 10xxxxxx&lt;/td&gt;
+      &lt;td&gt;charset&lt;/td&gt;
+      &lt;td&gt;字符编码，一般是UTF-8, ISO-8859-1，GBK, ASCII，指明是文本内容时采用的编码&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;许多unicode不容易写，所以go允许我们直接写数值码点，下面都是6个字节的字面量(看utf8很容易看出是6个字节，十六进制两个数是一个字节)&lt;/li&gt;
+  &lt;li&gt;Base64编码， 将二进制数据转成文本，会使用数据变长原来的1/3,之所以使用这样的编码是因为在某些文本协议中存在特殊字符，如果直接将二进制放入很可能破坏其结构，例如XML中的图片，XML的&lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;&amp;gt;&lt;/code&gt;等都是特殊字符，所以需要Base64编码转为安全的文本，即不带特殊字符的文本，这样也可以在文本中存放二进制数据，接收方解码之后可以使用，STMP邮件协议就是这么做的&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;世界&quot;
-&quot;\xe4\xb8\x96\xe7\x95\x8c&quot;   utf8
-&quot;\u4e16\u754c&quot;               16 bit unicode
-&quot;\U00004e16\U0000754c&quot;       32 bit unicode
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h3 id=&quot;message-id和correlation-id&quot;&gt;message-id和correlation-id&lt;/h3&gt;
+
+&lt;p&gt;message-id可以作为消息的唯一标识，correlation-id可以作为关联消息，表明该消息是另外一个消息的响应&lt;/p&gt;
+
+&lt;h3 id=&quot;timestamp&quot;&gt;timestamp&lt;/h3&gt;
+
+&lt;p&gt;表示消息的创建时间，是一个Unix时间戳&lt;/p&gt;
+
+&lt;h3 id=&quot;expiration&quot;&gt;expiration&lt;/h3&gt;
+
+&lt;p&gt;表示消息的过期时间，是一个时间戳字符串，当把一个过期的消息发布到服务器，该消息不会被路由到任何队列，而是直接被丢弃&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;下面都是rune字面量，256内的值可以用单个十六进制来表示，&lt;code class=&quot;highlighter-rouge&quot;&gt;\xe4\xb8\x96&lt;/code&gt;虽然是一个utf8编码的码点，但不是一个有效的rune字面量&lt;/li&gt;
+  &lt;li&gt;RabbitMQ还有其他让消息过期的功能，例如队列的x-message-ttl参数&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'世', '\u4e16', '\U00004e16'
-'\x41'
+&lt;h3 id=&quot;delivery-mode&quot;&gt;delivery-mode&lt;/h3&gt;
 
-'\xe4\xb8\x96' // 不是rune字面量
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;有两个值，1表示非持久消息，2表示持久化消息&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;对于字符串直接使用索引遍历，遍历的是字节，而可用使用range来遍历rune, utf8.RuneCountInString可以返回某个字节rune的个数&lt;/li&gt;
-  &lt;li&gt;当utf8在解码时碰到错误的字节会使用&lt;code class=&quot;highlighter-rouge&quot;&gt;\uFFFD&lt;/code&gt;来代替，是一个�这样的符号，当碰到了这样的符号，说明其他系统传过来的字节编码可能是不清楚的&lt;/li&gt;
-  &lt;li&gt;rune和string相互转化&lt;/li&gt;
+  &lt;li&gt;1使用纯内存队列，具有较低的延迟性，2开启磁盘存储的队列，能保证RabbitMQ在宕机之后重新启动还能继续发送存储的消息&lt;/li&gt;
+  &lt;li&gt;具体的使用要和业务相关，影响重大的业务例如交易数据使用2，即使丢失的数据也不会造成很大影响可以使用1&lt;/li&gt;
+  &lt;li&gt;消息的持久化和队列的持久化需要区别，要是消息能够持久化，队列也必须是持久化的，队列的持久化是RabbitMQ重启后会不会重新声明这些队列。&lt;/li&gt;
+  &lt;li&gt;持久化消息会有潜在的性能和伸缩性的问题&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;s:=&quot;哈哈&quot;
-r:=[]rune(s)   // string =&amp;gt; rune utf8 decode
-string(r)      // rune =&amp;gt; string utf8 encode
-string(65)     // &quot;A&quot;  integer =&amp;gt; string
-string(0x4eac) // &quot;京&quot;  0x4eac也是integer字面量
-string(1234567)// � 无效
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h3 id=&quot;app-id和user-id&quot;&gt;app-id和user-id&lt;/h3&gt;
 
-&lt;h2 id=&quot;字符和字节切片&quot;&gt;字符和字节切片&lt;/h2&gt;
+&lt;p&gt;应用id，255个UTF-8字符串&lt;/p&gt;
+
+&lt;p&gt;用户id, RabbitMQ会校验应用使用的认证用户和user-id是否一致， 可能用于聊天室这样的程序，每个用户的有自己的RabbitMQ用户&lt;/p&gt;
+
+&lt;h3 id=&quot;type&quot;&gt;type&lt;/h3&gt;
+
+&lt;p&gt;消息类型属性，更像一个自定义属性，可以用于指定额外的消息类型，例如指定使用thrift或者protobuf（两种二进制编码的消息，具有较小的空间使用)时所需要文件, 或者其他类型，只要消费者能识别并处理&lt;/p&gt;
+
+&lt;h3 id=&quot;reply-to&quot;&gt;reply-to&lt;/h3&gt;
+&lt;p&gt;定义不明确，谨慎使用&lt;/p&gt;
+&lt;h3 id=&quot;headers&quot;&gt;headers&lt;/h3&gt;
+&lt;p&gt;自定义属性，是一个键值对, 并且RabbitMQ可以根据header的值来路由，而不依赖路由键&lt;/p&gt;
+
+&lt;h3 id=&quot;priority&quot;&gt;priority&lt;/h3&gt;
+
+&lt;p&gt;优先级，介于0到9的整数，数字越小具有越高的优先级，可以先比值大的收到(感觉打破消息队列里面队列这个概念，但毕竟是一个功能)&lt;/p&gt;
+
+&lt;h3 id=&quot;cluster-idreserved&quot;&gt;cluster-id/reserved&lt;/h3&gt;
+
+&lt;p&gt;不能使用&lt;/p&gt;
+
+&lt;h2 id=&quot;总结&quot;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;合理利用消息队列的属性可以创建有价值的元数据，来创建复杂的路由和事务机制，而不用污染消息体本身&lt;/p&gt;
+</description>
+        <pubDate>Tue, 03 Mar 2020 19:26:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/rabbitmq_properties/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/rabbitmq_properties/</guid>
+        
+        <category>rabbitmq</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
+    
+      <item>
+        <title>RabbitMQ和AMQP</title>
+        <description>&lt;p&gt;RabbitMQ基本概念和AMQ协议简介&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;四个重要的标准包
+  &lt;li&gt;RabbitMQ使用RPC进行客户端和服务端的通信，与普通的Web API不同的是，在AMQP规范中，服务器和客户端都可以发出命令&lt;/li&gt;
+  &lt;li&gt;要完全连接到RabbitMQ需要完成由三个同步RPC请求所组成的序列，这三个RPC请求分别对应启动、调整和打开连接操作&lt;/li&gt;
+  &lt;li&gt;一个AMQP连接可以有多个信道，允许客户端和服务器之间进行多次会话，这被称为多路复用。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;amqp帧frame&quot;&gt;AMQP帧(frame)&lt;/h1&gt;
+&lt;ul&gt;
+  &lt;li&gt;帧类型&lt;/li&gt;
+  &lt;li&gt;信道编号&lt;/li&gt;
+  &lt;li&gt;以字节为单位的帧大小&lt;/li&gt;
+  &lt;li&gt;帧有效载荷&lt;/li&gt;
+  &lt;li&gt;结束字节标记（ASCII值206）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/rabbitmq_frame.jpg&quot; alt=&quot;rabbitmq帧&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;五种帧类型
     &lt;ol&gt;
-      &lt;li&gt;strings,对字符串基本的查找，替换，比较，去空，分割，结合操作&lt;/li&gt;
-      &lt;li&gt;bytes，对[]byte有相同的操作&lt;/li&gt;
-      &lt;li&gt;strconv，负责boolean, int, float等类型转换到string&lt;/li&gt;
-      &lt;li&gt;unicode, 对rune的各种操作&lt;/li&gt;
+      &lt;li&gt;协议头帧，用于连接RabbitMQ, 仅使用一次&lt;/li&gt;
+      &lt;li&gt;方法帧，RPC请求或者响应&lt;/li&gt;
+      &lt;li&gt;内容头帧，包含一条消息的大小和属性&lt;/li&gt;
+      &lt;li&gt;消息体帧，包含消息的内容&lt;/li&gt;
+      &lt;li&gt;心跳帧，一种校验机制确保两端都可用且在正常工作&lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
-  &lt;li&gt;因为string是不可变的，所以当想通过不断累积的方式获取新的string需要不停的分配内存，使用bytes.Buffer效率更好&lt;/li&gt;
-  &lt;li&gt;下面的方式可以将string和[]byte互转，在转化的过程中，重新分配内存和拷贝是必要的，因为[]byte是可以改变的&lt;/li&gt;
+  &lt;li&gt;AMQP中的心跳行为用于确保客户端和服务器之间相互响应，这是一个AMQP作为一种双向RPC协议的完美示例，如果RabbitMQ发生心跳到客户端没有得到响应会断开连接，客户端可以在建立连接时将心跳时间设置为0来关闭它们。也可以更改rabbitmq.config的heartbat值更改RabbitMQ的最大心跳间隔。之前在我们线上发生过一个问题，Nodejs客户端经常报一个Channel Closed的错，后来发现是因为一个canvas的作图程序将Nodejs进程给阻塞导致不能及时返回心跳给RabbitMQ&lt;/li&gt;
+  &lt;li&gt;使用方法帧、内容头帧和消息体帧向RabbitMQ发布消息，先是携带命令和参数的方法帧，然后是内容帧，包含消息属性以及消息体的大小，最后是消息体帧，包含具体的消息，如果消息体超过上限，消息内容会被拆分为多个消息体帧&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;s := &quot;abc&quot;
-b := []byte(s)
-s2 := string(b)
+&lt;h3 id=&quot;方法帧结构&quot;&gt;方法帧结构&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/02_05.png&quot; alt=&quot;方法帧&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Basic和Publish这两个字段位置是类和方法的ID,使用数字表示RPC命令&lt;/li&gt;
+  &lt;li&gt;参数包括交换器名称和路由键值&lt;/li&gt;
+  &lt;li&gt;mandatory标志告知RabbitMQ必须完成消息路由，否则应该返回一个Basic.Return帧用于指明消息无法路由&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;内容头帧结构&quot;&gt;内容头帧结构&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/02_06.png&quot; alt=&quot;内容头帧&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;包含消息的一些属性&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;消息体帧&quot;&gt;消息体帧&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/02_07.png&quot; alt=&quot;内容头帧&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;消息体对AMQ协议是不透明的，不被RabbitMQ解码，检查&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;使用协议&quot;&gt;使用协议&lt;/h2&gt;
+
+&lt;h3 id=&quot;声明一个交换机exchange&quot;&gt;声明一个交换机(exchange)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;使用Exchange.Declare命令来向服务端请求声明一个创建一个交换机，如果成功将返回Exchange.DeclareOk, 否则RabbitMQ将返回Channel.Close来关闭信道，包含一个状态码和失败原因&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;声明一个队列queue&quot;&gt;声明一个队列(queue)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;使用Queue.Declare来声明一个队列，成功将返回Queue.DecalreOk,否则将关闭信道，重复声明一个队列是可以的，RabbitMQ将会对后续的声明请求返回一些有用的信息，如现在的消息数量，消费者的数量&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;当对一个已存在的队列声明不同的属性时，会关闭信道， 应用程序正确处理这个错误，有的客户端库会捕获一个异常而有的客户端库会注册一个监听器来监听Channel.Close命令，对于生产者向一个关闭的信道发送消息，RabbitMQ将关闭连接，而对于消费者可能并不会感到异常，会以为RabbitMQ中没有消息。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;绑定队列和交换机&quot;&gt;绑定队列和交换机&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;使用Queue.Bind和Queue.BindOk来绑定队列到交换机上面，一次只能有一个队列&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;发布一个消息到rabbitmq&quot;&gt;发布一个消息到RabbitMQ&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;如上所述，最少要发送三个帧，方法帧是Basic.Publish, 携带着交换机的名称和路由键，RabbitMQ会将交换机的名称和已配置的交换机比较（如果找不到的话，默认会丢弃消息，可以通过配置mandatory标识或者消息确认机制来保证消息肯定能发送，不过都会对性能有影响)&lt;/li&gt;
+  &lt;li&gt;当找到交换机的时候，会根据路由键来找特定的队列，RabbitMQ会将消息以FIFO的方式放入任何绑定的队列，消息并不是被复制放入队列，而是存放的引用，这样能减少物理内存的使用，当消息被取走时，根据引用找到对应的消息然后发送。&lt;/li&gt;
+  &lt;li&gt;默认情况，没有消费者消费，消息会一直保存在队列，取决于delivery-mode属性，RabbitMQ选择将不断增长的消息保存在内存中还是写入硬盘
+&lt;img src=&quot;http://pic.sjoe.top/blog/02_11.png&quot; alt=&quot;发送消息&quot; /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;从rabbitmq消费&quot;&gt;从RabbitMQ消费&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;使用Basic.Consume和Basic.ConsumeOk来建立消费连接，在此之后，RabbitMQ服务端将不断使用Basic.Deliver来发送消息到客户端&lt;/li&gt;
+  &lt;li&gt;当客户端想停止接收消息的时候，发送Basic.Cancel到RabbitMQ, 在接收到服务端的Basic.CancelOk之前，这个阶段还是可以一直接收消息的。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/02_12.png&quot; alt=&quot;发送消息&quot; /&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;当配置Basic.Consume的参数no_ack为false的时候，客户端必须通知RabbitMQ每一个消息它都收到了，当配置为true的时候，RabbitMQ将不断的发送给客户端直到它发送Basic.Cancel或者断开连接&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://pic.sjoe.top/blog/02_13.png&quot; alt=&quot;发送消息&quot; /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 03 Mar 2020 19:26:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/rabbitmq_and_amqp/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/rabbitmq_and_amqp/</guid>
+        
+        <category>rabbitmq</category>
+        
+        
+        <category>posts</category>
+        
+      </item>
+    
+      <item>
+        <title>golang方法的使用</title>
+        <description>&lt;p&gt;Golang中的方法的使用，方法是go中面向对象里面特殊的函数&lt;/p&gt;
+
+&lt;p&gt;Go中的OOP, 一个对象是一个有方法的变量，方法是和特定类型相关的函数, 面向对象的两个重要原则：封装(encapsulation)和组合(composition)&lt;/p&gt;
+
+&lt;h2 id=&quot;方法声明&quot;&gt;方法声明&lt;/h2&gt;
+
+&lt;p&gt;和函数声明类似，只不过在函数名之前有一个额外的参数&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// 常规函数&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;math&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Hypot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// Point类型的方法&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;math&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Hypot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;//方法调用&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;p被称为接受者(receiver)，在OOP中，调用方法称为给对象发一个消息&lt;/li&gt;
+  &lt;li&gt;这两个Distance函数并不冲突，一个是package level下的，一个是Point.Distance&lt;/li&gt;
+  &lt;li&gt;p.Distance被称为选择器，因为它选择了合适的方法给接收者p,&lt;/li&gt;
+  &lt;li&gt;p的字段和方法是同一空间下的，所以也不能有重复的&lt;/li&gt;
+  &lt;li&gt;不仅仅只可以给struct类型定义方法，任意类型都可以有方法，比如number, string, slice, map&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;指针的方法&quot;&gt;指针的方法&lt;/h2&gt;
+
+&lt;p&gt;因为函数会对传入参数进行拷贝，如果想&lt;strong&gt;更新值&lt;/strong&gt;或者&lt;strong&gt;参数比较大不想拷贝&lt;/strong&gt;的话，可以传递地址来使用指针&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;类型方法(value receiver)和指针方法(point receiver)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;一条准则，如果类型T有一个指针方法，那么类型T方法应该都是指针方法&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;因为这样可以保持方法集的一致性，参考&lt;a href=&quot;https://stackoverflow.com/questions/27775376/value-receiver-vs-pointer-receiver&quot;&gt;StackOverFlow&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;指针方法需要一个地址，所以只有可以传入地址就可以调用指针方法，无论是我们显示传入，还是编译器帮我们隐式将变量值转为地址，但对于字面量获取不到地址则不能调用指针方法&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;factor&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+ 	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;factor&lt;/span&gt;
+ 	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;factor&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;// {2 4}&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// {4 8}&lt;/span&gt;
+
+
+
+&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// cannot call pointer method on Point literal&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;类型方法需要一个类型值，只要传入值，无论是我们显示传入，还是编译器隐式将指针转为值，甚至字面量都可以调用&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;math&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Hypot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;pprp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pprp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// 5&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// 5&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;// 5&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;注意上述的编译器隐式转换，当选择值方法还是指针方法时可以参考上面此&lt;a href=&quot;https://github.com/golang/go/wiki/CodeReviewComments#receiver-type&quot;&gt;Code Review&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;nil是有效的指针接受者&quot;&gt;Nil是有效的指针接受者&lt;/h3&gt;
+
+&lt;p&gt;正如某些函数允许参数为nil, 方法的接受者也是&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;当map值传递（不是指针）时，任何对元素的更改，增加，删除，都可以被调用者感受，而对map本身进行赋值nil或者重新赋值另一个map,是无法被调用者感受到的&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;结构体内嵌的组合类型&quot;&gt;结构体内嵌的组合类型&lt;/h2&gt;
+
+&lt;p&gt;如之前所说的，结构体的匿名字段可以拥有那个类型的字段，不仅可以拥有字段，还可以拥有方法&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ColoredPoint&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;color&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RGBA&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;red&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RGBA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;blue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RGBA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ColoredPoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;red&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ColoredPoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;blue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;p.Distance&lt;/code&gt;的参数不能使用q， 而只能使用q.Point, 因为ColoredPoint类型并不是Point类型， 这和Java中的继承概念不一样，编译器大致是通过下面的代码来实现这个功能的&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ColoredPoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ColoredPoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;factor&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;float64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;factor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;h2 id=&quot;数字和字符串转换&quot;&gt;数字和字符串转换&lt;/h2&gt;
-
 &lt;ul&gt;
-  &lt;li&gt;两种将数字转换为字符串的方式，fmt.Sprintf和strconv.Itoa&lt;/li&gt;
-  &lt;li&gt;strconv.FormatInt可以将数字转换为不同的进制，fmt.Sprintf的%b, %d, %u, %x也可以将数字转换为特定的进制，而且还可以加入一些额外的信息&lt;/li&gt;
-  &lt;li&gt;strconv.Atoi和strconv.ParseInt可以将字符串的数字转换为数字，ParseInt可以指定进制和返回的尺寸&lt;/li&gt;
+  &lt;li&gt;匿名字段也可以是一个指针&lt;/li&gt;
+  &lt;li&gt;一个结构体可以有多个匿名字段，当编译器寻找一个方法p.ScaleBy时，会先寻找ColoredPoint直接声明的方法，如果找不到，就找ColoredPoint匿名字段的方法，还是找不到，就找匿名字段的匿名字段，当在同一级有两个匿名字段有同样的方法并且被用到了，这时编译器会分不清使用的那个方法从而报错。&lt;/li&gt;
+  &lt;li&gt;匿名结构体类型使用匿名字段，将方法赋到变量上面&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h1 id=&quot;常量&quot;&gt;常量&lt;/h1&gt;
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;sync&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Mutex&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;mapping&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mapping&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;make&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Lookup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mapping&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Unlock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;方法值和表达式&quot;&gt;方法值和表达式&lt;/h2&gt;
+
+&lt;p&gt;如同函数值，方法也可以直接赋给一个变量，然后再使用，这时候方法也是有状态的，下面当Point.Distance是Value Receiver和Point Receiver时输出不同&lt;/p&gt;
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;distanceFromp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;distanceFromp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;distanceFromp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;在编译时期就能确定的值&lt;/li&gt;
-  &lt;li&gt;常量的类型既可以显示声明，也可以根据值来进行推断&lt;/li&gt;
-  &lt;li&gt;iota, 常量生成器，在常量变量自动生成自动增长的值，声明一些规律的常量很好用，比如周一到周日，KiB,MiB,GiB这些单位。iota依赖左移和右移运算符来完成某些操作，所以对于KB,MB这些值是1000的是无法用iota声明的（KiB和KB的区别，一个是1024,一个是1000，但之前学习的时候KB指的是1024， 默认KB是KiB)&lt;/li&gt;
+  &lt;li&gt;方法表达式, 类似把方法转为函数, 当一类方法入参出参相同时可以赋值给变量统一调用&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;无类型常量&quot;&gt;无类型常量&lt;/h2&gt;
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;q&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;distance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Distance&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%T&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;scale&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Point&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ScaleBy&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;scale&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%T&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scale&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;//5&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;//func(main.Point, main.Point) float64&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;//{2 2}&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;//func(*main.Point, float64)&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;封装&quot;&gt;封装&lt;/h2&gt;
+
+&lt;p&gt;隐藏在对象内的不可访问的字段和方法这个过程被称为封装&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;常量是可以无类型的，无类型意思就是类型在用的时候才显式或者隐式转换，比如0这个常量，赋值给int，它就是int类型，赋值给float64, 它就是float64类型&lt;/li&gt;
-  &lt;li&gt;六种无类型常量，无类型布尔，无类型整形，无类型rune, 无类型float, 无类型复数，无类型字符串&lt;/li&gt;
+  &lt;li&gt;Go只通过一个方法来控制访问，大写开头表示可对外访问，小写开头对外不可访问，适用于包内的成员，结构体的字段和方法&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;封装有三个优点:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;不能被调用者修改对象内的变量，就不用写更多的语句来考虑这个变量可能出现的值&lt;/li&gt;
+  &lt;li&gt;隐藏细节，防止调用者依赖这些变量，导致不能随意修改，有更好的兼容性&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;最终要的是，不让调用者随意的改变对象内的值，例如Counter这个类，只能通过方法获取下一个数，而不能直接控制Counter内的变量来随意赋值&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;getter和setter方法可以修改内部的变量，在命名getter方法时通常会省略Get&lt;/li&gt;
+  &lt;li&gt;Go不支持禁止导出字段，所以一旦导出，就肯定是可以被访问的，为了保持API兼容性，后续更新也必须导出，所以字段是否要被导出需要深思熟虑&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-        <pubDate>Mon, 02 Dec 2019 12:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/basic_type/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/basic_type/</guid>
+        <pubDate>Tue, 03 Mar 2020 18:30:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/method/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/method/</guid>
         
         <category>golang</category>
         
@@ -654,229 +593,225 @@ s2 := string(b)
       </item>
     
       <item>
-        <title>mongodb工具，安全，故障</title>
-        <description>&lt;p&gt;mongodb导入和导入工具，监控工具，授权认证，故障排除&lt;/p&gt;
+        <title>golang接口</title>
+        <description>&lt;p&gt;Golang中的接口，接口是Go中一个重要的概念，类似Java中的Object, 对类型的抽象起到了重要的作用&lt;/p&gt;
 
-&lt;h3 id=&quot;安全&quot;&gt;安全&lt;/h3&gt;
+&lt;p&gt;接口类型是一些其他类型表现的概括和抽象，通过概括，可以让我们写出更灵活和扩展的函数，因为这些函数没有和特定类型绑定在一起&lt;/p&gt;
 
-&lt;h4 id=&quot;用户&quot;&gt;用户&lt;/h4&gt;
 &lt;ul&gt;
-  &lt;li&gt;创建第一个用户&lt;/li&gt;
+  &lt;li&gt;go的接口和其他语言不同的是，go是隐式满足的，即只要某个类型拥有了这个接口的方法，就实现了这个接口&lt;/li&gt;
+  &lt;li&gt;接口是一种抽象类型，与之对应的是具体类型，抽象类型没有内在的数据结构，只拥有一些方法，通过这些方法可以知道这个接口可以做什么&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;gt; db.createUser(
-... {
-... user: &quot;myUserAdmin&quot;,
-... pwd: &quot;passwd&quot;,
-... roles: [ &quot;userAdminAnyDatabase&quot;]
-... }
-... )
-Successfully added user: { &quot;user&quot; : &quot;myUserAdmin&quot;, &quot;roles&quot; : [ &quot;userAdminAnyDatabase&quot; ] }
+&lt;p&gt;Fprintf方法的第一个参数就是一个接口, 只有拥有Write的方法的类型就可以传入Fprintf, 例如Printf将标准输出传进去，Sprintf将Buffer内存缓存传进去（go新版这个函数已经变了)&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Fprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;io&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Writer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;format&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{})&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+
+&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Writer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{})&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Fprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Stdout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Sprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{})&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BufferFprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;h4 id=&quot;认证&quot;&gt;认证&lt;/h4&gt;
+&lt;h2 id=&quot;满足接口&quot;&gt;满足接口&lt;/h2&gt;
+
+&lt;p&gt;当一个具体类型拥有了某个接口类型的所有方法，那么这个具体类型满足了这个接口类型，也能说这个具体类型是这个接口类型&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;在mongod启动时加入–auth参数开启登录验证&lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;使用用户名和密码进行身份验证&lt;/p&gt;
-
-    &lt;p&gt;mongo -u “myUserAdmin” -p “passwd” –authenticationDatabase “admin”&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;authenticationDatabase表示创建用户使用的数据库，但不是指定该用户权限的。&lt;/li&gt;
-  &lt;li&gt;如果目的既是登陆test数据库，而用户也是test数据库中创建，那么可以不用写后面的参数 –authenticationDatabase&lt;/li&gt;
+  &lt;li&gt;接口的赋值规则很简单，只有满足接口类型都可以赋值给接口变量&lt;/li&gt;
+  &lt;li&gt;类型T可以调用&lt;code class=&quot;highlighter-rouge&quot;&gt;*T&lt;/code&gt;的方法，只要参数是个变量（而不是字面量), 因为编译器会隐式取它的地址，不过这仅仅是语法糖，在满足接口中，类型T不会拥有*T的方法，所以也就无法满足某些接口&lt;/li&gt;
+  &lt;li&gt;当一个具体类型被赋值给一个接口类型时，只能调用该接口类型拥有的方法，即使这个具体类型还会有其他的方法&lt;/li&gt;
+  &lt;li&gt;空接口类型&lt;code class=&quot;highlighter-rouge&quot;&gt;var any interface{}&lt;/code&gt;， 任何类型都满足它，所以可以将任何类型赋值给它，但因为空接口没有任何方法，所以被赋值的具体类型的方法也不能使用，只有当我们转换回来才能使用&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4 id=&quot;授权&quot;&gt;授权&lt;/h4&gt;
+&lt;h2 id=&quot;flag包例子&quot;&gt;flag包例子&lt;/h2&gt;
+
+&lt;p&gt;flag包可以从命令行参数中获取值，或者显示默认值，或者打印使用帮助信息&lt;/p&gt;
+
+&lt;p&gt;使用flag需要满足一下接口, String方法特定类型转为string, Set将命令行中的String转为特定类型&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Value&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;接口值&quot;&gt;接口值&lt;/h2&gt;
+
+&lt;p&gt;接口的值有两块组成，具体类型和那个类型的值，被称为接口的动态类型和动态值&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;type&lt;/td&gt;
+      &lt;td&gt;nil&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;value&lt;/td&gt;
+      &lt;td&gt;nil&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;权限 = 在哪里 + 做什么&lt;/p&gt;
-
-    &lt;p&gt;{resource:{db:”test”, collections: “”}, actions:[“find”, “update”]}&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;角色，一组权限的集合
-    &lt;ol&gt;
-      &lt;li&gt;read, 读取当前数据库中所有非系统集合&lt;/li&gt;
-      &lt;li&gt;readWrite, 读写当前数据库中所有非系统集合&lt;/li&gt;
-      &lt;li&gt;dbAdmin, 管理当前数据库&lt;/li&gt;
-      &lt;li&gt;userAdmin, 管理当前数据库中的用户和角色&lt;/li&gt;
-      &lt;li&gt;read/readWrite/dbAdmin/userAdminAnyDatabase 对所有数据库执行操作（只在admin数据库提供）&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;创建一个只能读取test数据库的用户&lt;/li&gt;
+  &lt;li&gt;go中的类型是编译时期的，所以实际在接口中存储的是类型描述符，就是类的名称和所拥有的方法&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;use test;
-db.createUser(
-    {
-        user: &quot;testReader&quot;,
-        pwd: &quot;passwd&quot;,
-        roles: [{role: &quot;read&quot;, db: &quot;test&quot;}]
-    }
-)
-
-Successfully added user: {
-	&quot;user&quot; : &quot;testReader&quot;,
-	&quot;roles&quot; : [
-		{
-			&quot;role&quot; : &quot;read&quot;,
-			&quot;db&quot; : &quot;test&quot;
-		}
-	]
-}
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	&lt;span class=&quot;k&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;io&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Writer&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Stdout&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;new&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Buffer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;创建一个只能读取accounts集合的用户&lt;/li&gt;
+  &lt;li&gt;当实际调用具体类型的方法时，不能直接去调用，必须编译器根据类型描述符生成一些获取Write方法地址的代码才行，接受者(Reciver)是接口动态值的一份拷贝&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;use test;
-db.createRole(
-    {
-        role: &quot;readAccount&quot;,
-        privileges: [
-            {
-                resource: {
-                    db:&quot;test&quot;, 
-                    collection: &quot;accounts&quot;
-                },
-                actions: [&quot;find&quot;]
-            }
-        ],
-        roles: []
-    }
-)
-use test;
-db.createUser(
-    {
-        user: &quot;accountsReader&quot;,
-        pwd: &quot;passwd&quot;,
-        roles: [&quot;readAccount&quot;]
-    }
-)
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;hello&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;// 相当于&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Stdout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([]&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;byte&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;hello&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;roles字段可以从已有角色中继承权限&lt;/li&gt;
+  &lt;li&gt;接口值是可以比较的，都为nil则相等，或者他们的动态类型一样且他们的动态值使用&lt;code class=&quot;highlighter-rouge&quot;&gt;==&lt;/code&gt;也相等（取决于不同类型的表现)可以认为相等，可以用于map的key和switch，如果具体类型（例如切片）不能比较，那么将会panic&lt;/li&gt;
+  &lt;li&gt;可以使用fmt中的%T来输出接口值的动态类型&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;工具&quot;&gt;工具&lt;/h2&gt;
+&lt;h2 id=&quot;含有nil指针的接口不是nil&quot;&gt;含有nil指针的接口不是nil&lt;/h2&gt;
 
-&lt;h4 id=&quot;数据导入导出&quot;&gt;数据导入导出&lt;/h4&gt;
-&lt;h5 id=&quot;mongoexport&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongoexport/&quot;&gt;mongoexport&lt;/a&gt;&lt;/h5&gt;
-&lt;h5 id=&quot;mongoimport&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongoimport/index.html&quot;&gt;mongoimport&lt;/a&gt;&lt;/h5&gt;
+&lt;p&gt;nil接口什么都没有，和含有nil指针的接口不同&lt;/p&gt;
+
 &lt;ul&gt;
-  &lt;li&gt;upsertFileds 根据特定字段去对比从而选择去更新还是插入&lt;/li&gt;
-  &lt;li&gt;stopOnError 发送错误停止&lt;/li&gt;
-  &lt;li&gt;maintainInsertionOrder 维持csv的顺序导入&lt;/li&gt;
+  &lt;li&gt;下面这个接口是和nil不等的, 当被调用时，可以产生panic&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4 id=&quot;监控&quot;&gt;监控&lt;/h4&gt;
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;type&lt;/td&gt;
+      &lt;td&gt;*bytes.Buffer&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;value&lt;/td&gt;
+      &lt;td&gt;nil&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
 
-&lt;h5 id=&quot;mongostat统计mongodb数据库当前的状态&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongostat/index.html&quot;&gt;mongostat&lt;/a&gt;，统计mongodb数据库当前的状态&lt;/h5&gt;
+&lt;h2 id=&quot;使用sortinterface进行排序&quot;&gt;使用sort.Interface进行排序&lt;/h2&gt;
+
+&lt;p&gt;Go的sort.Sort函数使用sort.Interface进行原位排序(内部有多种排序算法), 实现这个接口就可以传入sort.Sort函数进行排序&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Interface&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Len is the number of elements in the collection.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Less reports whether the element with&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// index i should sort before the element with index j.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Less&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Swap swaps the elements with indexes i and j.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Swap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;需要用户有clusterMonitor的角色&lt;/li&gt;
-  &lt;li&gt;可以指定打印间隔和次数&lt;/li&gt;
-  &lt;li&gt;o指定需要查看的指标
-    &lt;ol&gt;
-      &lt;li&gt;commman - 每秒执行的命令数&lt;/li&gt;
-      &lt;li&gt;dirty, used - 数据库引擎缓存的使用量百分比&lt;/li&gt;
-      &lt;li&gt;vsize - 虚拟内存使用量（MB)&lt;/li&gt;
-      &lt;li&gt;res - 常驻内存使用量&lt;/li&gt;
-      &lt;li&gt;conn - 连接数&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
+  &lt;li&gt;sort.Reverse方法返回一个新的Interface覆盖了原Less方法&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h5 id=&quot;mongotop显示每个集合上的读写时间&quot;&gt;&lt;a href=&quot;https://docs.mongodb.com/manual/reference/program/mongotop/index.html&quot;&gt;mongotop&lt;/a&gt;,显示每个集合上的读写时间&lt;/h5&gt;
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reverse&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// This embedded Interface permits Reverse to use the methods of&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// another Interface implementation.&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;Interface&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
-&lt;h2 id=&quot;故障&quot;&gt;故障&lt;/h2&gt;
+&lt;span class=&quot;c&quot;&gt;// Less returns the opposite of the embedded implementation's Less method.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reverse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Less&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Interface&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Less&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
-&lt;h5 id=&quot;响应时间过长&quot;&gt;响应时间过长&lt;/h5&gt;
+&lt;span class=&quot;c&quot;&gt;// Reverse returns the reverse order for data.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Reverse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Interface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reverse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Sort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Reverse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;byArtist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tracks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;error接口&quot;&gt;error接口&lt;/h2&gt;
+
+&lt;p&gt;error类型是一个接口类型实现了error接口&lt;/p&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;error&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;合适的索引，使用explain()查看索引的有效性&lt;/li&gt;
-  &lt;li&gt;工作集超出RAM的大小，使用mongostat查看服务的状态，used百分比远远大过dirty的百分比时，表示mongo内存不够使用&lt;/li&gt;
+  &lt;li&gt;创建一个error类型最简单的方式是使用errors.New, 根据提供的错误信息返回一个新的error&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h5 id=&quot;连接失败&quot;&gt;连接失败&lt;/h5&gt;
+&lt;h2 id=&quot;类型断言&quot;&gt;类型断言&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;x.(T)&lt;/code&gt; x是一个接口,当T是一个类型，检查x这个接口的动态类型是不是T类型，如果是的话，将返回T类型的结果，如果不是的话，将产生panic；&lt;/p&gt;
+
+&lt;p&gt;当T是一个接口类型时，检查x这个接口的动态类型是不是满足T接口,如果满足的话，将x这个接口类型转换为T接口类型，它的动态类型和值是没变的，这样的话，返回值会暴露不同的方法子集，原来是x接口类型的方法集，后来是T接口类型的方法集&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;默认情况下，mongod进程可以支持多达65536个连接，不恰当的&lt;strong&gt;配置&lt;/strong&gt;可能限制连接数
-    &lt;ol&gt;
-      &lt;li&gt;db.serverStatus().connections可查看连接数&lt;/li&gt;
-    &lt;/ol&gt;
-  &lt;/li&gt;
-  &lt;li&gt;ulimt -a配置中间的open files也会限制mongodb的连接数&lt;/li&gt;
+  &lt;li&gt;nil接口，类型断言会失败&lt;/li&gt;
+  &lt;li&gt;向方法较少的接口类型断言和赋值没什么区别, 除了x是nil时会失败，赋值不会失败&lt;/li&gt;
+  &lt;li&gt;接收类型断言的第二个返回值可以让类型断言失败时，第二个返回值ok为false, 如下&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ok&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;File&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ok&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;// ...use f...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;可以使用接口类型断言来查询表现，例如断言一个空接口是error或者string， 就知道这个值可以做什么&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;类型选择&quot;&gt;类型选择&lt;/h2&gt;
+
+&lt;p&gt;接口有两种不同的使用风格，一个是定义了一些方法，具体类型实现了这些方法，接口隐藏了这些具体类型方法的实现，所以这种情况下强调的是方法，而不是具体类型，二是接口持有不同的具体类型，而接口是这些类型的集合，使用类型断言可以从这些类型转换，这种情况强调具体类型实现了接口，而不是接口的方法&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;多个连续用if else的类型断言可以使用，switch来代替，type是关键字&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-go highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;switch&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;c&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;uint&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;c&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;  &lt;span class=&quot;c&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;default&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;    &lt;span class=&quot;c&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;建议&quot;&gt;建议&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;对于只有一个实现的接口是不必要的，它们有运行时代价，有多个实现的时候使用接口才必要, 除了接口和它的实现不在一个包下的情况例外&lt;/li&gt;
+  &lt;li&gt;接口越少，越简单的方法越好，更容易被实现&lt;/li&gt;
+  &lt;li&gt;go支持了面向对象编程，但不是说必须这样，单独的函数，未封装的类型有可以很好的使用&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-        <pubDate>Thu, 05 Sep 2019 10:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/mongodb_tool_security/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_tool_security/</guid>
+        <pubDate>Tue, 03 Mar 2020 18:30:00 +0800</pubDate>
+        <link>http://localhost:4000/posts/interface/</link>
+        <guid isPermaLink="true">http://localhost:4000/posts/interface/</guid>
         
-        <category>mongodb</category>
-        
-        
-        <category>posts</category>
-        
-      </item>
-    
-      <item>
-        <title>mongodb技巧</title>
-        <description>&lt;p&gt;mongodb的一些技巧&lt;/p&gt;
-
-&lt;h2 id=&quot;按日期分组&quot;&gt;按日期分组&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;要分组的日期是Date类型的&lt;/li&gt;
-  &lt;li&gt;注意timezone, +0800代表中国时区&lt;/li&gt;
-  &lt;li&gt;group的_id可以进行转字符串，然后连接处理&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;db.suggestions.aggregate([
-    {
-        $project: {
-          year: {$year: {date:'$submitDate', timezone:'+0800'}},
-          month: {$month: {date:'$submitDate', timezone:'+0800'}},
-          dayOfMonth: {$dayOfMonth: {date:'$submitDate', timezone:'+0800'}},
-          submitDate:1
-        }
-    },
-    {
-        $group: {
-            _id:{year:'$year', month:'$month', day:'$dayOfMonth'},
-            
-            count: {
-                $sum: 1
-            }
-        }
-    },
-    {   
-        $sort : { _id : 1 }
-    }   
-])
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;要分组的日期是timeStamp，并且为string, 网上查找的方法&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;db.getCollection('wechat_message').aggregate(  
-    [     
-        {   $project : { day : {$substr: [&quot;$sendTime&quot;, 0, 10] }}},          
-        {   $group   : { _id : &quot;$day&quot;,  number : { $sum : 1 }}},  
-        {   $sort    : { _id : -1 }}          
-    ]  
-)  
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-</description>
-        <pubDate>Thu, 05 Sep 2019 10:00:00 +0800</pubDate>
-        <link>http://localhost:4000/posts/mongodb_skill/</link>
-        <guid isPermaLink="true">http://localhost:4000/posts/mongodb_skill/</guid>
-        
-        <category>mongodb</category>
+        <category>golang</category>
         
         
         <category>posts</category>
