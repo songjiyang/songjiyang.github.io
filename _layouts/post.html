@@ -9,8 +9,8 @@ layout: default
     <time datetime="{{ page.date | date: "%Y-%m-%d" }}">{{ page.date | date: "%d-%m-%Y" }}</time>
 
     {% if page.author %}
-      &nbsp;/&nbsp;
-      <span>{{ page.author }}</span>
+    &nbsp;/&nbsp;
+    <span>{{ page.author }}</span>
     {% endif %}
   </p>
 
@@ -20,20 +20,25 @@ layout: default
 
     <div class="post-links">
       {% if page.next.url %}
-        <a class="link-to-post" href="{{ page.next.url | relative_url}}">
-          <span class="link-to-post__next">&#10535; &nbsp;Next post</span>
-          <span class="link-to-post__title">{{ page.next.title }}</span>
-        </a>
+      <a class="link-to-post" href="{{ page.next.url | relative_url}}">
+        <span class="link-to-post__next">&#10535; &nbsp;Next post</span>
+        <span class="link-to-post__title">{{ page.next.title }}</span>
+      </a>
       {% endif %}
 
       {% if page.previous.url %}
-        <a class="link-to-post" href="{{ page.previous.url | relative_url}}">
-          <span class="link-to-post__prev">&#10535; &nbsp;Previous post</span>
-          <span class="link-to-post__title">{{ page.previous.title }}</span>
-        </a>
+      <a class="link-to-post" href="{{ page.previous.url | relative_url}}">
+        <span class="link-to-post__prev">&#10535; &nbsp;Previous post</span>
+        <span class="link-to-post__title">{{ page.previous.title }}</span>
+      </a>
       {% endif %}
     </div>
 
   </div>
 
 </article>
+<!-- 不蒜子计数 -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<span id="busuanzi_container_site_pv">总访问量 <span id="busuanzi_value_site_pv"></span> 次 </span>
+<span id="busuanzi_container_site_uv">| 总访客数 <span id="busuanzi_value_site_uv"></span> 人 </span>
+<!-- 不蒜子计数 -->
