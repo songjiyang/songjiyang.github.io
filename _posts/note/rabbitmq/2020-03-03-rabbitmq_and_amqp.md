@@ -25,7 +25,7 @@ RabbitMQ基本概念和AMQ协议简介
 - 帧有效载荷
 - 结束字节标记（ASCII值206）
 
-![rabbitmq帧](http://pic.sjoe.top/blog/rabbitmq_frame.jpg)
+![rabbitmq帧](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/rabbitmq_frame.jpg)
 
 - 五种帧类型
     1. 协议头帧，用于连接RabbitMQ, 仅使用一次
@@ -38,7 +38,7 @@ RabbitMQ基本概念和AMQ协议简介
 
 ### 方法帧结构
 
-![方法帧](http://pic.sjoe.top/blog/02_05.png)
+![方法帧](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/02_05.png)
 
 - Basic和Publish这两个字段位置是类和方法的ID,使用数字表示RPC命令
 - 参数包括交换器名称和路由键值
@@ -46,13 +46,13 @@ RabbitMQ基本概念和AMQ协议简介
 
 ### 内容头帧结构
 
-![内容头帧](http://pic.sjoe.top/blog/02_06.png)
+![内容头帧](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/02_06.png)
 
 - 包含消息的一些属性
 
 ### 消息体帧
 
-![内容头帧](http://pic.sjoe.top/blog/02_07.png)
+![内容头帧](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/02_07.png)
 
 
 - 消息体对AMQ协议是不透明的，不被RabbitMQ解码，检查
@@ -78,14 +78,14 @@ RabbitMQ基本概念和AMQ协议简介
 - 如上所述，最少要发送三个帧，方法帧是Basic.Publish, 携带着交换机的名称和路由键，RabbitMQ会将交换机的名称和已配置的交换机比较（如果找不到的话，默认会丢弃消息，可以通过配置mandatory标识或者消息确认机制来保证消息肯定能发送，不过都会对性能有影响)
 - 当找到交换机的时候，会根据路由键来找特定的队列，RabbitMQ会将消息以FIFO的方式放入任何绑定的队列，消息并不是被复制放入队列，而是存放的引用，这样能减少物理内存的使用，当消息被取走时，根据引用找到对应的消息然后发送。
 - 默认情况，没有消费者消费，消息会一直保存在队列，取决于delivery-mode属性，RabbitMQ选择将不断增长的消息保存在内存中还是写入硬盘
-![发送消息](http://pic.sjoe.top/blog/02_11.png)
+![发送消息](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/02_11.png)
 
 ### 从RabbitMQ消费
 
 - 使用Basic.Consume和Basic.ConsumeOk来建立消费连接，在此之后，RabbitMQ服务端将不断使用Basic.Deliver来发送消息到客户端
 - 当客户端想停止接收消息的时候，发送Basic.Cancel到RabbitMQ, 在接收到服务端的Basic.CancelOk之前，这个阶段还是可以一直接收消息的。
 
-![发送消息](http://pic.sjoe.top/blog/02_12.png)
+![发送消息](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/02_12.png)
 - 当配置Basic.Consume的参数no_ack为false的时候，客户端必须通知RabbitMQ每一个消息它都收到了，当配置为true的时候，RabbitMQ将不断的发送给客户端直到它发送Basic.Cancel或者断开连接
 
-![发送消息](http://pic.sjoe.top/blog/02_13.png)
+![发送消息](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/02_13.png)

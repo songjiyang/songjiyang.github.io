@@ -42,4 +42,4 @@ sass:
   sass_dir: assets/_sass
   style: compressed
 
-images: "http://pic.sjoe.top/blog"
+images: "https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog"

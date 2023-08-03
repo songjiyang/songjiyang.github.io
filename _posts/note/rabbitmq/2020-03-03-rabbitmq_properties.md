@@ -19,7 +19,7 @@ RabbitMQ消息属性介绍
 
 - 消息头帧中的消息属性时一系列被Basic.Properties数据结构预定义好的值，有些属性例如delivery-mode, 已经有具体的含义，有的属性例如type没有具体属性
 
-![消息属性](http://pic.sjoe.top/blog/03fig02_alt.jpg
+![消息属性](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/03fig02_alt.jpg
 )
 
 ### content-type

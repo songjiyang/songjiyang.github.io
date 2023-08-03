@@ -49,7 +49,7 @@ Rabbitmq提供了很多选项功能来保证消息的可靠性，但这需要我
 
 此功能是RabbitMQ的功能，只支持特定库, 开启之后，RabbitMQ接收到发布者的消息之后会返回给发布者Basic.Ack或者Basic.Nack来告知发布者消息被成消费者消费，持久化或者无法路由。
 
-![时序图](http://pic.sjoe.top/blog/04fig04_alt.jpg)
+![时序图](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/04fig04_alt.jpg)
 
 - 可以使用回调来处理Basic.Ack或者Basic.Nack, 或者同步等待
 - 发布者确认不会和事务一起工作，是一个AMQP TX的轻量级并提供高性能的代替方案
@@ -65,7 +65,7 @@ Rabbitmq提供了很多选项功能来保证消息的可靠性，但这需要我
 ### 事务和批量操作
 
 在投递确认出现之前，确保消息被成功投递的唯一方法是事务，AMQP事务可以将消息批量发送的RabbitMQ, 然后提交或回滚
-![时序图](http://pic.sjoe.top/blog/04fig06_alt.jpg)
+![时序图](https://cdn.jsdelivr.net/gh/songjiyang/myPic@main/blog/04fig06_alt.jpg)
 
 - RabbitMQ事务中的每个命令作用同一个队列时才能保持真正的原子性
 - 将delivery-mode设置为2在事务中需要等待更长的时间
